@@ -45,7 +45,7 @@ const Layout = () => {
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="flex-[2] min-h-0 border-l">
+        <div className="flex-2 min-h-0 border-l">
           <StreetImages
             onSelect={setSelectedImage}
             onHover={setHoveredImageId}

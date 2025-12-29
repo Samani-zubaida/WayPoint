@@ -2,7 +2,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import { Toaster } from "react-hot-toast";
-import ChatCompo from "./component/chatCompo.jsx";
 import { ChatProvider } from "./Context/chatContext.jsx";
 import MapPage from "./pages/MapPage.jsx";
 import "../src/utils/fixLeafletIcons.js";
@@ -21,7 +20,6 @@ function App() {
             <Route path="/login" element={<Login />} />
 
             {/* AI Chat Route */}
-            <Route path="/chatAI" element={<ChatCompo />} />
             <Route path="/map" element={<MapPage />} />
           </Routes>
         </div>
