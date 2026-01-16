@@ -1,9 +1,4 @@
 {
-  "dependencies": {
-    "@material-ui/core": "^4.12.4",
-    "@material-ui/icons": "^4.11.3",
-    "@react-google-maps/api": "^2.20.7",
-    "axios": "^1.13.2",
-    "google-map-react": "^2.2.5"
-  }
+  "name": "hackathon",
+  "private": true
 }

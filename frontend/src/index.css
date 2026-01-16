@@ -1,4 +1,10 @@
 @import "tailwindcss";
+@plugin '@tailwindcss/typography';
+.diagonal-bg {
+  @apply bg-gradient-to-r from-gray-800 to-blue-900;
+  clip-path: polygon(0 0, 40% 0, 2% 100%, 0 100%);
+}
+
 
 .leaflet-marker-icon {
   transition: transform 0.3s ease;

@@ -1,20 +1,21 @@
 import React, { useState } from "react";
 import { useNearbyWikimediaImages } from "../../hooks/useNearbyWikimediaImages.js.js";
-import { getDistanceInMeters, estimateETA } from "../../utils/calcDistance.js";
+import { getDistance, estimateETA } from "../../utils/calcDistance.js";
 
-const StreetImages = ({ onSelect, onHover, onSave }) => {
-  const { images, location, error } = useNearbyWikimediaImages();
-  const [mode, setMode] = useState("walk"); // walk | drive
+const StreetImages = ({ location, onSelect, onHover, onSave }) => {
+  const { images, error } = useNearbyWikimediaImages(location);
+  const [mode, setMode] = useState("walk");
+
+  if (!location)
+    return <p className="p-4 text-gray-500">Search or select a place</p>;
 
   if (error) return <p className="p-4 text-red-500">{error}</p>;
-  if (!location.lat) return <p className="p-4">Getting your location…</p>;
 
   return (
-    <div className="h-full overflow-y-auto p-4">
+    <div className="h-full overflow-y-auto p-4 overscroll-contain">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Nearby Visuals</h3>
 
-        {/* ETA MODE TOGGLE */}
         <div className="flex gap-1 text-xs">
           <button
             onClick={() => setMode("walk")}
@@ -39,12 +40,7 @@ const StreetImages = ({ onSelect, onHover, onSave }) => {
         {images.map((img) => {
           const distanceKm =
             img.lat && img.lon
-              ? haversineDistance(
-                  location.lat,
-                  location.lon,
-                  img.lat,
-                  img.lon
-                )
+              ? getDistance(location.lat, location.lon, img.lat, img.lon)
               : null;
 
           const distanceText =
@@ -61,7 +57,7 @@ const StreetImages = ({ onSelect, onHover, onSave }) => {
               onClick={() => onSelect(img)}
               onMouseEnter={() => onHover(img.id)}
               onMouseLeave={() => onHover(null)}
-              className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:ring-2 ring-blue-400"
+              className="bg-white rounded-xl shadow-md cursor-pointer hover:ring-2 ring-blue-400"
             >
               <img
                 src={img.url}
@@ -70,15 +66,11 @@ const StreetImages = ({ onSelect, onHover, onSave }) => {
               />
 
               <div className="p-3">
-                <h4 className="font-semibold text-sm line-clamp-1">
-                  {img.title}
-                </h4>
-
-                <p className="text-xs text-gray-600 line-clamp-2">
+                <h4 className="font-semibold text-sm">{img.description}</h4>
+                {/* <p className="text-xs text-gray-600 line-clamp-2">
                   {img.description}
-                </p>
+                </p> */}
 
-                {/* DISTANCE + ETA */}
                 <div className="mt-2 flex justify-between text-xs text-gray-700">
                   <span>📏 {distanceText}</span>
                   <span>⏱ {etaText}</span>

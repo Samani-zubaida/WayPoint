@@ -1,51 +1,64 @@
-import React from 'react'
+import React, { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate()
   return (
-   <div className="h-screen w-screen flex flex-col bg-gray-50">
-      {/* Navbar */}
-      <nav className="bg-gray-800 text-white shadow-lg p-4 flex items-center justify-between">
-        {/* Brand */}
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wide">
-          <img src="/logo(3).png" alt="Snap2Map Logo" className="h-19 w-30  mr-2 rounded-full"
-          
-          /> 
-       
-        </h1>  
+    <nav className="w-full bg-[#140d1e]">
+      {/* TOP BAR */}
+      <div className="h-20 flex items-center justify-between  max-w-8xl mx-auto">
+        
+        {/* LEFT: LOGO */}
+        <div className="flex items-center gap-3" style={{marginLeft:"40px"}}>
+          <img
+            src="/icon.jpg"
+            alt="icon"
+            className="h-10 w-15 rounded-3xl object-cover"
+          />
+          <span className="text-white font-bold text-3xl">
+            WayPoint
+          </span>
+        </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-4">
-          {/* Home Button */}
-          <button className= "relative overflow-hidden px-5 py-2 rounded-lg text-white font-semibold bg-gray-700 group shadow-md hover:shadow-xl hover:scale-105 transition transform">
-            <span className="absolute inset-0 bg-white opacity-10 transform -translate-x-full group-hover:translate-x-full transition-all duration-500 pointer-events-none"></span>
-          
-            Home
-          </button>
-          {/* Explore Button */}
-          <button className="relative overflow-hidden px-5 py-2 rounded-lg text-white font-semibold bg-gray-700 group shadow-md hover:shadow-xl hover:scale-105 transition transform">
-            <span className="absolute inset-0 bg-white opacity-10 transform -translate-x-full group-hover:translate-x-full transition-all duration-500 pointer-events-none"></span>
-            Explore
-          </button>
-
-          {/* Profile / Signup Button */}
-          <button className="relative overflow-hidden px-5 py-2 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-400 to-blue-900 group shadow-md hover:shadow-xl hover:scale-105 transition transform flex items-center gap-2">
-            <span className="absolute inset-0 bg-white opacity-10 transform -translate-x-full group-hover:translate-x-full transition-all duration-500 pointer-events-none"></span>
-           
+        {/* RIGHT: DESKTOP MENU */}
+        <div className="hidden md:flex items-center gap-8" style={{marginRight: "40px"}}>
+          <span className="text-white font-semibold whitespace-nowrap hover:text-gray-400" onClick={() => navigate("chatAI")}>
+            chat with AI
+          </span>
+          <span className="text-white font-semibold hover:text-gray-400" onClick={() => navigate("/login")}>
             Signup
-          </button>
-
-          <button className="relative overflow-hidden px-5 py-2 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-400 to-blue-900 group shadow-md hover:shadow-xl hover:scale-105 transition transform flex items-center gap-2">
-            <span className="absolute inset-0 bg-white opacity-10 transform -translate-x-full group-hover:translate-x-full transition-all duration-500 pointer-events-none"></span>
-           
-            login
+          </span>
+          <button className="h-10 w-[120px] bg-amber-500 text-gray-900 rounded-lg font-semibold hover:opacity-80">
+            Login
           </button>
         </div>
 
-        {/* Mobile Menu Icon */}
-      
-      </nav>
-    </div>
-  )
-}
+        {/* RIGHT: MOBILE MENU ICON */}
+        <button
+          className="md:hidden text-white text-3xl " style={{paddingRight: "20px"}}
+          onClick={() => setOpen(!open)}
+        >
+          ☰
+        </button>
+      </div>
 
-export default Navbar
+      {/* MOBILE DROPDOWN MENU */}
+      {open && (
+        <div className="md:hidden flex flex-col gap-4 px-4 pb-4 bg-[#25173b]">
+          <span className="text-white font-semibold">
+            Join as guest
+          </span>
+          <span className="text-white font-semibold">
+            Signup
+          </span>
+          <button className="h-10 w-full bg-amber-500 text-gray-900 rounded-lg font-semibold hover:opacity-80">
+            Login
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+};
+
+export default Navbar;

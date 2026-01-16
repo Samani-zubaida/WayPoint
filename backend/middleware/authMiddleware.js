@@ -1,28 +1,31 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
+// Middleware to protect routes
 export const protectRoute = async (req, res, next) => {
   try {
-    const token = req.headers.token;// directly from 'token' header
-    //  console.log("Incoming token:", req.headers.token);
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-      return res.status(401).json({ success: false, message: "No authentication token found" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ success: false, message: "No authentication token found" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_TOKEN);
+    const token = authHeader.split(" ")[1]; // Extract token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.userId).select("-Password");
-    
+    // Fetch user from DB
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, message: "User Not Found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    req.user = user;
+    req.user = user; 
     next();
-  } catch (error) {
-    console.log("protect route", error.message);
-    res.status(401).json({ success: false, message: error.message });
+  } catch (err) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid or expired token" });
   }
 };
-

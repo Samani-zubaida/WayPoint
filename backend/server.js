@@ -13,7 +13,7 @@ import uploadRouter from "./routes/MapRoutes/uploadRoutes.js";
 import placeRouter from "./routes/MapRoutes/placesRoute.js";
 import routeRouter from "./routes/MapRoutes/routeRoutes.js";
 import streetViewRouter from "./routes/MapRoutes/streetRoutes.js";
-
+import conversationRoutes from "./routes/conversationRoutes.js";
 
 
 
@@ -35,13 +35,14 @@ app.use((req, res, next) => {
 app.use('/api/users', userRouters);
 app.use("/api/posts" , PostRouters);
 app.use("/api/explore" , exploreRouter);
-app.use("/api", chatRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/map/geocode",geocodeRouter);
 app.use("/api/map/location",locationRouter);
 app.use("/api/map/upload",uploadRouter);
 app.use("/api/map/places", placeRouter);
 app.use("/api/map/route", routeRouter);
 app.use("/api/map/streetview", streetViewRouter);
+app.use("/api/conversations", conversationRoutes);
 
 
 app.listen(5000, () => {
