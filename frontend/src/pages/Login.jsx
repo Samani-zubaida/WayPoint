@@ -1,29 +1,28 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import { AuthContext } from "../Context/authContext";
-
+import Navbar from "../component/Navbar/Navbar";
 
 export default function LoginPage() {
+
   const [fullName, setFullName] = useState("");
   const [currState, setCurrState] = useState("Login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const { login } = useContext(AuthContext);
-  const handleSubmit = (event) => {
-          event.preventDefault();
 
-    // The backend endpoint state is now correctly determined by currState.
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
     const apiState = currState === "Login" ? "login" : "signup";
 
-    // Prepare payload based on the current state.
     let payload;
+
     if (currState === "signup") {
       payload = {
         name: fullName,
         email: email,
-        password: password, // The variable name has been changed to lowercase 'p'.
+        password: password
       };
     } else {
       payload = {
@@ -32,116 +31,107 @@ export default function LoginPage() {
       };
     }
 
-    // Call the login function with the correct state and payload.
     login(apiState, payload);
-  }
+  };
 
-  
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden">
 
-      {/* Background diagonal */}
-      <div className="absolute inset-0 diagonal-bg"></div>
-
-      {/* MAIN CARD */}
-      <div
-        className="
-          relative z-10 w-full max-w-[900px]
-          bg-white/10 backdrop-blur-md rounded-xl
-          overflow-hidden shadow-xl flex flex-col md:flex-row
-          md:h-[500px]
-        "
-      >
+   
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-200 p-6">
+     <Navbar />
+      {/* CARD */}
+      <div className="w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl bg-white/90 backdrop-blur-lg flex flex-col md:flex-row">
 
         {/* LEFT SIDE IMAGE */}
         <div
-          className="hidden md:flex w-1/2 bg-cover bg-center p-8 text-gray-800 flex-col justify-between"
+          className="hidden md:flex md:w-1/2 relative bg-cover bg-center"
           style={{ backgroundImage: "url('/login_img.png')" }}
         >
-          <h2 className="text-2xl font-bold text-center mt-10 text-gray-950">
-            THE WORLD REMAINS OPEN, EVEN WHEN LIFE FEELS CLOSED.
-          </h2>
 
-          <div className="flex justify-center gap-4 mb-6">
-            <i className="fa-brands fa-facebook"></i>
-            <i className="fa-brands fa-instagram"></i>
-            <i className="fa-brands fa-twitter"></i>
+          {/* overlay */}
+          <div className="absolute inset-0 bg-black/40"></div>
+
+          <div className="relative z-10 text-white p-10 flex flex-col justify-between h-full">
+
+            <h2 className="text-4xl font-bold leading-snug">
+              Explore The World
+              <br />
+              With Snap2Map
+            </h2>
+
+            <p className="text-sm opacity-90">
+              Discover hidden places, connect with travelers,
+              and map your journey across the globe.
+            </p>
+
+            <div className="flex gap-6 text-xl">
+              <i className="fa-brands fa-facebook hover:scale-125 transition"></i>
+              <i className="fa-brands fa-instagram hover:scale-125 transition"></i>
+              <i className="fa-brands fa-twitter hover:scale-125 transition"></i>
+            </div>
+
           </div>
         </div>
 
-        {/* RIGHT SIDE AUTH FORM */}
-        <div
-          className="
-            w-full md:w-1/2 bg-gray-50
-            p-6 sm:p-10 flex flex-col justify-center
-          "
-        >
-          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
-            {currState === "Login" ? "LOGIN" : "SIGN UP"}
+        {/* RIGHT SIDE FORM */}
+        <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
+
+          <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+            {currState === "Login" ? "Welcome Back" : "Create Account"}
           </h1>
 
-          {/* NAME FIELD (Signup only) */}
-          {currState === "signup" && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {currState === "signup" && (
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full p-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+              />
+            )}
+
             <input
-              className="w-full p-3 rounded-md border border-gray-800 text-black mb-4"
-              placeholder="Name"
-              value={fullName}
-              onChange={(e)=>setFullName(e.target.value)}
+              type="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
             />
-          )}
 
-          {/* EMAIL */}
-          <input
-            className="w-full p-3 rounded-md border border-gray-800 text-black mb-4"
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) =>setEmail(e.target.value)}
-          />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+            />
 
-          {/* PASSWORD */}
-          <input
-            className="w-full p-3 rounded-md border border-gray-800 text-black mb-4"
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            {currState === "Login" && (
+              <p className="text-right text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
+                Forgot password?
+              </p>
+            )}
 
-          {/* FORGOT PASSWORD (login only) */}
-          {currState === "Login" && (
-            <p className="text-right text-sm mb-4 cursor-pointer">
-              Forgot Password?
-            </p>
-          )}
+            {/* BUTTON */}
+            <button
+              className="w-full py-3 rounded-lg font-semibold text-white
+              bg-gradient-to-r from-blue-500 to-indigo-600
+              hover:scale-[1.02] hover:shadow-lg transition-all"
+            >
+              {currState === "Login" ? "Login" : "Create Account"}
+            </button>
 
-          {/* BUTTON */}
-          <button
-            onClick={handleSubmit}
-            className="
-              relative overflow-hidden px-5 py-2 rounded-lg
-              text-white font-semibold bg-gradient-to-r
-              from-gray-800 to-blue-900 group shadow-md
-              hover:shadow-xl hover:scale-105 transition transform
-            "
-          >
-            <span
-              className="
-                absolute inset-0 bg-white opacity-10 transform
-                -translate-x-full group-hover:translate-x-full
-                transition-all duration-500 pointer-events-none
-              "
-            ></span>
-            {currState === "Login" ? "Login" : "Create Account"}
-          </button>
+          </form>
 
-          {/* SWITCH LOGIN ↔ SIGNUP */}
-          <p className="text-center mt-4 text-gray-700 text-sm">
+          {/* SWITCH */}
+          <p className="text-center mt-6 text-gray-600 text-sm">
             {currState === "Login" ? (
               <>
-                Don't have an account?{" "}
+                Don’t have an account?{" "}
                 <span
-                  className="text-blue-900 font-semibold cursor-pointer"
+                  className="text-blue-600 font-semibold cursor-pointer"
                   onClick={() => setCurrState("signup")}
                 >
                   Sign Up
@@ -151,7 +141,7 @@ export default function LoginPage() {
               <>
                 Already have an account?{" "}
                 <span
-                  className="text-blue-900 font-semibold cursor-pointer"
+                  className="text-blue-600 font-semibold cursor-pointer"
                   onClick={() => setCurrState("Login")}
                 >
                   Login
@@ -161,6 +151,7 @@ export default function LoginPage() {
           </p>
 
         </div>
+
       </div>
     </div>
   );

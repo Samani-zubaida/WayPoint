@@ -27,4 +27,3 @@ const userPostSchema = new mongoose.Schema({
 });
 
 export default mongoose.model("UserPost", userPostSchema);
-

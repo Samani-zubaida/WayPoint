@@ -26,12 +26,8 @@ export const AuthProvider = ({ children }) => {
       if (!storedToken) return;
 
       const { data } = await axios.get("/api/users/check-auth");
-      console.log("data",data.success);
       if(data.success) {
          setAuthUser(data.user);
-        console.log("user = ",data.user);
-        console.log("auth user is",authUser);
-        console.log("succes data",data);
         setToken(storedToken); // ensure axios header is set
       }
     } catch (err) {
@@ -76,7 +72,6 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
   
-  console.log("final check",authUser);
   const value = {
     authUser,
     token,

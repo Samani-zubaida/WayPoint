@@ -1,101 +1,160 @@
 import fetch from "node-fetch";
 import Conversation from "../../models/AiChat/Conversation.js";
 import { marked } from "marked";
-import { formatContent } from "../../utils/formatContent.js";
 
-/**
- * Gemini free-tier friendly rate limit
- * 1 request every 1.5 seconds
- */
 let lastGeminiCallTime = 0;
 const GEMINI_MIN_DELAY = 1500;
 
 function canCallGemini() {
   const now = Date.now();
-  if (now - lastGeminiCallTime < GEMINI_MIN_DELAY) return false;
+  if (now - lastGeminiCallTime < GEMINI_MIN_DELAY) {
+    return false;
+  }
   lastGeminiCallTime = now;
   return true;
 }
 
-// 🔹 helper to remove HTML before sending to Gemini
-function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, "");
+async function callGeminiWithRetry(url, options, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    const response = await fetch(url, options);
+
+    if (response.ok) return response;
+
+    if (response.status === 503) {
+      console.warn("Gemini 503 – retrying...");
+      await new Promise((r) => setTimeout(r, 2000));
+      continue;
+    }
+
+    return response;
+  }
+
+  throw new Error("Gemini unavailable after retries");
 }
 
 export const chatWithAI = async (req, res) => {
   const { userId, message, conversationId } = req.body;
 
-  if (!userId || !message?.trim()) {
-    return res.status(400).json({ error: "Invalid input" });
+  if (!message?.trim()) {
+    return res.status(400).json({ error: "Message is required" });
   }
 
   try {
-    /* 1️⃣ Find or create conversation */
-    let conversation = conversationId
-      ? await Conversation.findById(conversationId)
-      : null;
+    /* ------------------------------
+      Find or create conversation
+    ------------------------------ */
+    let conversation = null;
 
+    if (conversationId) {
+      conversation = await Conversation.findOne({
+        _id: conversationId,
+        userId,
+      });
+    }
+
+    // ✅ Create new conversation if not found
     if (!conversation) {
       conversation = await Conversation.create({
         userId,
+        title: "New Chat",
         messages: [],
       });
     }
 
-    /* 2️⃣ Save USER message */
+    /* ------------------------------
+      Set title from first user message
+    ------------------------------ */
+    if (conversation.title === "New Chat") {
+      const cleanTitle = message.replace(/[#*_`]/g, "").trim();
+      conversation.title =
+        cleanTitle.length > 50
+          ? cleanTitle.slice(0, 50) + "..."
+          : cleanTitle;
+    }
+
+    /* ------------------------------
+      Save user message
+    ------------------------------ */
     conversation.messages.push({
       sender: "user",
-      content: formatContent(message),
+      content: message,
     });
 
-    /* 3️⃣ Rate limit */
+    /* ------------------------------
+      Rate limit protection
+    ------------------------------ */
     if (!canCallGemini()) {
       await conversation.save();
+
       return res.json({
-        reply: "<b>Please wait before sending another message.</b>",
-        conversationId: conversation._id,
+        reply: marked.parse(
+          "**Please wait a moment** before sending another message ⏳"
+        ),
+        conversation,
       });
     }
 
-    /* 4️⃣ Build Gemini context */
-    const contents = conversation.messages
-      .slice(-6)
-      .filter((m) => m.sender === "bot")
-      .map((m) => ({
-        role: "model",
-        parts: [{ text: stripHtml(m.content) }],
-      }));
-
-    contents.push({
-      role: "user",
-      parts: [{ text: message }],
-    });
-
-    /* 5️⃣ Gemini API call */
+    /* ------------------------------
+      Gemini request
+    ------------------------------ */
     const apiKey = process.env.GEMINI_API_KEY;
     const model = "models/gemini-2.5-flash";
 
+    const systemPrompt = `
+You are a helpful assistant.
 
-    const response = await fetch(
+Rules:
+- Give detailed, well-structured answers
+- Use headings, paragraphs, and bullet points
+- Emphasize important words using **bold**
+- Keep responses clean and readable
+- Use emojis where appropriate
+- If user asks about places, include its history, current condition ,people reviews
+- include places manufacturer , its owner, best time to visit , famous food there
+`;
+
+    const geminiContents = [
+      {
+        role: "user",
+        parts: [{ text: systemPrompt }],
+      },
+      ...conversation.messages.slice(-6).map((msg) => ({
+        role: msg.sender === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      })),
+    ];
+
+    const response = await callGeminiWithRetry(
       `https://generativelanguage.googleapis.com/v1/${model}:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents }),
+        body: JSON.stringify({ contents: geminiContents }),
       }
     );
 
+    /* ------------------------------
+      Handle Gemini errors
+    ------------------------------ */
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini API error:", errorText);
+      const errText = await response.text();
+      console.error("Gemini error:", response.status, errText);
 
       await conversation.save();
+
       return res.json({
-        reply: "<b>AI error. Please try again.</b>",
-        conversationId: conversation._id,
+        reply: marked.parse(
+          response.status === 429
+            ? "**AI is busy.** Please try again shortly ⏳"
+            : "**AI error.** Please try again later ⚠️"
+        ),
+        conversation,
       });
     }
 
+    /* ------------------------------
+      Parse Gemini response
+    ------------------------------ */
     const data = await response.json();
 
     const rawText =
@@ -104,27 +163,9 @@ export const chatWithAI = async (req, res) => {
 
     const formattedReply = marked.parse(rawText);
 
-    const summaryPrompt = `Summarize the following messege in few words :\n\n${message}`;
-
-    const summaryResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1/${model}:generateContent?key=${apiKey}`,
-      {method:"Post",
-       headers : {"Content-Type":"application/json"},
-       body : JSON.stringify({
-        contents:[
-          {role : "user", parts : [{text : summaryPrompt}],
-        },
-        ],
-       }),
-      }
-    )
-
-    const summaryData = await summaryResponse.json();
-    const summaryText =
-      summaryData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-
-    /* 6️⃣ Save BOT message */
+    /* ------------------------------
+      Save bot reply
+    ------------------------------ */
     conversation.messages.push({
       sender: "bot",
       content: formattedReply,
@@ -132,14 +173,21 @@ export const chatWithAI = async (req, res) => {
 
     await conversation.save();
 
-    /* 7️⃣ Send response */
+    /* ------------------------------
+      Send response
+    ------------------------------ */
     return res.json({
       reply: formattedReply,
-      summary : summaryText,
-      conversationId: conversation._id,
+      conversation,
     });
-  } catch (err) {
-    console.error("chatWithAI error:", err);
-    return res.status(500).json({ error: "Server error" });
+  } catch (error) {
+    console.error("chatWithAI error:", error);
+    return res.status(500).json({
+      error: "Server error. Please try again later.",
+    });
   }
 };
+
+
+
+

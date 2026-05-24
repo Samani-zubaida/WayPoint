@@ -14,7 +14,8 @@ import placeRouter from "./routes/MapRoutes/placesRoute.js";
 import routeRouter from "./routes/MapRoutes/routeRoutes.js";
 import streetViewRouter from "./routes/MapRoutes/streetRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
-
+import cookieParser from "cookie-parser";
+import commentRoutes from "./routes/commentRoutes.js";
 
 
 import cors from 'cors';
@@ -24,9 +25,16 @@ app.get("/", (req, res) => {
     res.send("Hello from backend");
 });
 
-app.use(cors());
-app.use(express.json()); //
+app.use(express.json({ limit: "50mb" }));
+app.use(cookieParser());
 
+app.use(
+  cors({
+    origin: "http://localhost:5173", // ❗ exact frontend origin
+    credentials: true,               // ❗ allow cookies
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 app.use((req, res, next) => {
   console.log("Raw body:", req.body);
   next();
@@ -43,6 +51,7 @@ app.use("/api/map/places", placeRouter);
 app.use("/api/map/route", routeRouter);
 app.use("/api/map/streetview", streetViewRouter);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/comments", commentRoutes);
 
 
 app.listen(5000, () => {
