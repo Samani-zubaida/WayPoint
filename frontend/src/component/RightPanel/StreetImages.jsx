@@ -1,97 +1,185 @@
-import React, { useState } from "react";
-import { useNearbyWikimediaImages } from "../../hooks/useNearbyWikimediaImages.js.js";
-import { getDistance, estimateETA } from "../../utils/calcDistance.js";
+import React, { useMemo, useState } from "react";
+import { useNearbyWikimediaImages } from "../../hooks/useNearbyWikimediaImages.js";
+import { getDistance, estimateETA } from "../../utils/calcDistance";
 
-const StreetImages = ({ location, onSelect, onHover, onSave }) => {
-  const { images, error } = useNearbyWikimediaImages(location);
+const StreetImages = ({
+  location,
+  onSelect,
+  onHover,
+  onSave,
+}) => {
+
+  const { images = [], error } =
+    useNearbyWikimediaImages(location);
+
   const [mode, setMode] = useState("walk");
 
-  if (!location)
-    return <p className="p-4 text-gray-500">Search or select a place</p>;
+  const processedImages = useMemo(() => {
 
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
+    // SAFETY CHECK
+    if (!location?.lat || !location?.lng) {
+      return [];
+    }
+
+    return images.map((img) => {
+
+      // FIXED lng
+      const distanceMeters =
+        img.lat && img.lng
+          ? getDistance(
+              location.lat,
+              location.lng,
+              img.lat,
+              img.lng
+            )
+          : null;
+
+      // CONVERT TO KM
+      const distanceKm =
+        distanceMeters !== null
+          ? distanceMeters / 1000
+          : null;
+
+      return {
+        ...img,
+
+        distanceKm,
+
+        distanceText:
+          distanceKm !== null
+            ? distanceKm < 1
+              ? `${Math.round(distanceKm * 1000)} m`
+              : `${distanceKm.toFixed(2)} km`
+            : "—",
+
+        etaText:
+          distanceKm !== null
+            ? estimateETA(distanceKm, mode)
+            : "—",
+      };
+    });
+
+  }, [images, location, mode]);
+
+  // NO LOCATION
+  if (!location) {
+    return (
+      <div className="h-full flex items-center justify-center text-gray-500">
+        Search or select a place
+      </div>
+    );
+  }
+
+  // ERROR
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
-    <div className="h-full overflow-y-auto p-4 overscroll-contain">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Nearby Visuals</h3>
+    <div className="h-full overflow-y-auto p-4 bg-gray-50">
 
-        <div className="flex gap-1 text-xs">
-          <button
-            onClick={() => setMode("walk")}
-            className={`px-2 py-1 rounded ${
-              mode === "walk" ? "bg-blue-500 text-white" : "bg-gray-200"
-            }`}
-          >
-            Walk
-          </button>
-          <button
-            onClick={() => setMode("drive")}
-            className={`px-2 py-1 rounded ${
-              mode === "drive" ? "bg-blue-500 text-white" : "bg-gray-200"
-            }`}
-          >
-            Drive
-          </button>
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-5">
+
+        <h2 className="text-lg font-bold">
+          Nearby Visuals
+        </h2>
+
+        <div className="flex gap-2">
+          {["walk", "drive"].map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`
+                px-3 py-1 rounded-lg text-sm transition
+                ${
+                  mode === m
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200"
+                }
+              `}
+            >
+              {m}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {images.map((img) => {
-          const distanceKm =
-            img.lat && img.lon
-              ? getDistance(location.lat, location.lon, img.lat, img.lon)
-              : null;
+      {/* EMPTY STATE */}
+      {processedImages.length === 0 && (
+        <div className="text-center text-gray-500 mt-10">
+          No nearby images found
+        </div>
+      )}
 
-          const distanceText =
-            distanceKm < 1
-              ? `${Math.round(distanceKm * 1000)} m`
-              : `${distanceKm.toFixed(2)} km`;
+      {/* IMAGES */}
+      <div className="space-y-4">
 
-          const etaText =
-            distanceKm !== null ? estimateETA(distanceKm, mode) : "—";
+        {processedImages.map((img) => (
 
-          return (
-            <div
-              key={img.id}
-              onClick={() => onSelect(img)}
-              onMouseEnter={() => onHover(img.id)}
-              onMouseLeave={() => onHover(null)}
-              className="bg-white rounded-xl shadow-md cursor-pointer hover:ring-2 ring-blue-400"
-            >
-              <img
-                src={img.url}
-                alt={img.title}
-                className="w-full h-40 object-cover"
-              />
+          <div
+            key={img.id}
+            onClick={() => onSelect(img)}
+            onMouseEnter={() => onHover(img.id)}
+            onMouseLeave={() => onHover(null)}
+            className="
+              bg-white rounded-2xl overflow-hidden
+              shadow-md hover:shadow-xl
+              transition cursor-pointer
+            "
+          >
 
-              <div className="p-3">
-                <h4 className="font-semibold text-sm">{img.description}</h4>
-                {/* <p className="text-xs text-gray-600 line-clamp-2">
-                  {img.description}
-                </p> */}
+            {/* IMAGE */}
+            <img
+              src={img.url}
+              alt={img.title}
+              loading="lazy"
+              className="w-full h-44 object-cover"
+            />
 
-                <div className="mt-2 flex justify-between text-xs text-gray-700">
-                  <span>📏 {distanceText}</span>
-                  <span>⏱ {etaText}</span>
-                </div>
+            {/* CONTENT */}
+            <div className="p-4">
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSave(img);
-                  }}
-                  className="mt-2 text-xs text-blue-600"
-                >
-                  Save to timeline
-                </button>
+              <h3 className="font-semibold text-sm line-clamp-2">
+                {img.description}
+              </h3>
+
+              <div className="mt-3 flex justify-between text-xs text-gray-600">
+
+                <span>
+                  📏 {img.distanceText}
+                </span>
+
+                <span>
+                  ⏱️ {img.etaText}
+                </span>
+
               </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSave(img);
+                }}
+                className="
+                  mt-3 text-blue-600
+                  text-sm font-medium
+                "
+              >
+                Save to timeline
+              </button>
+
             </div>
-          );
-        })}
+          </div>
+
+        ))}
       </div>
     </div>
   );
 };
 
-export default StreetImages;
+export default React.memo(StreetImages);

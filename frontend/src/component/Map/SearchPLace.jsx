@@ -12,19 +12,28 @@ const SearchPlace = ({ onSearch }) => {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
       );
+
       const data = await res.json();
+
       if (!data.length) return;
 
       const place = {
+        id: Date.now(),
         name: data[0].display_name,
         lat: Number(data[0].lat),
-        lon: Number(data[0].lon), // Standardized to match MapContainer center prop
+        lng: Number(data[0].lon),
       };
 
-      map.flyTo([place.lat, place.lon], 16, { duration: 1.2 });
+      // MOVE MAP
+      map.flyTo([place.lat, place.lng], 16, {
+        duration: 1.5,
+      });
+
+      // SEND TO PARENT
       onSearch(place);
-    } catch (error) {
-      console.error("Search failed:", error);
+
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -33,13 +42,16 @@ const SearchPlace = ({ onSearch }) => {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        onKeyDown={(e) =>
+          e.key === "Enter" && handleSearch()
+        }
         placeholder="Search place..."
         className="px-4 py-2 text-sm outline-none w-64"
       />
+
       <button
         onClick={handleSearch}
-        className="px-4 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+        className="px-4 bg-blue-600 text-white"
       >
         Search
       </button>

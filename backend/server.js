@@ -27,10 +27,10 @@ app.get("/", (req, res) => {
 app.use(cors());
 app.use(express.json()); //
 
-app.use((req, res, next) => {
-  console.log("Raw body:", req.body);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log("Raw body:", req.body);
+//   next();
+// });
 
 app.use('/api/users', userRouters);
 app.use("/api/posts" , PostRouters);

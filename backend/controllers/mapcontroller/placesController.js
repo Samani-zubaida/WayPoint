@@ -1,19 +1,47 @@
-// controllers/placesController.js
 import { getNearbyPlaces } from "../../services/placesService.js";
 
 export const fetchNearbyPlaces = async (req, res) => {
   try {
-    const { lat, lon, radius = 1500 } = req.query;
+    const {
+      lat,
+      lon,
+      lng,
+      radius = 500,
+    } = req.query;
 
-    if (!lat || !lon)
-      return res.status(400).json({ error: "lat & lon are required" });
+    // SUPPORT BOTH lon and lng
+    const longitude = lon || lng;
 
-    const places = await getNearbyPlaces(lat, lon, radius);
-    res.json(places);
+    console.log("📍 REQUEST:", {
+      lat,
+      longitude,
+      radius,
+    });
+
+    if (!lat || !longitude) {
+      return res.status(400).json({
+        success: false,
+        error: "lat and longitude required",
+      });
+    }
+
+    const places = await getNearbyPlaces(
+      lat,
+      longitude,
+      radius
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: places,
+    });
   } catch (err) {
-    res.status(500).json({
-      error: "Failed to fetch nearby places",
-      details: err.message,
+    console.error("❌ CONTROLLER ERROR:");
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      error: err.message,
     });
   }
 };

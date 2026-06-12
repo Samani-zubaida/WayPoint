@@ -1,52 +1,108 @@
 import axios from "axios";
 
-export const getNearbyPlaces = async (lat, lon, radius = 1500) => {
-  // Ensure lat/lon are numbers
-  lat = parseFloat(lat);
-  lon = parseFloat(lon);
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
 
-  if (isNaN(lat) || isNaN(lon)) {
-    throw new Error("Invalid latitude or longitude");
-  }
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
 
-  // Overpass QL query
-  const query = `
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) *
+      Math.cos(φ2) *
+      Math.sin(Δλ / 2) *
+      Math.sin(Δλ / 2);
+
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
+
+  return R * c;
+}
+
+export const getNearbyPlaces = async (
+  lat,
+  lon,
+  radius = 500
+) => {
+  try {
+    console.log("📡 Calling Overpass API...");
+
+    const query = `
 [out:json][timeout:25];
-(
-  node["amenity"](around:${radius},${lat},${lon});
-  way["amenity"](around:${radius},${lat},${lon});
-  relation["amenity"](around:${radius},${lat},${lon});
-  
-  node["tourism"](around:${radius},${lat},${lon});
-  way["tourism"](around:${radius},${lat},${lon});
-  relation["tourism"](around:${radius},${lat},${lon});
-
-  node["shop"](around:${radius},${lat},${lon});
-  way["shop"](around:${radius},${lat},${lon});
-  relation["shop"](around:${radius},${lat},${lon});
-);
-out center;
+node
+  (around:${radius},${lat},${lon})
+  ["amenity"];
+out body 40;
 `;
 
-  try {
-    const res = await axios.post("https://overpass-api.de/api/interpreter", query, {
-      headers: { "Content-Type": "text/plain" },
-    });
+    const response = await axios.post(
+      "https://overpass-api.de/api/interpreter",
+      query,
+      {
+        headers: {
+          "Content-Type": "text/plain",
+          "User-Agent":
+            "NearbyExplorer/1.0",
+        },
 
-    // Map Overpass results to simplified structure
-    return res.data.elements.map((place) => ({
-      id: place.id,
-      name: place.tags?.name || "Unnamed Place",
-      type:
-        place.tags?.amenity ||
-        place.tags?.tourism ||
-        place.tags?.shop ||
-        "Unknown",
-      lat: place.lat || place.center?.lat,
-      lon: place.lon || place.center?.lon,
-    }));
-  } catch (err) {
-    console.error("Overpass API error:", err.message);
-    throw new Error("Failed to fetch nearby places");
+        timeout: 30000,
+      }
+    );
+
+    console.log("✅ OVERPASS SUCCESS");
+
+    const elements =
+      response.data.elements || [];
+
+    const places = elements.map(
+      (place) => ({
+        id: place.id,
+
+        name:
+          place.tags?.name ||
+          "Unnamed Place",
+
+        type:
+          place.tags?.amenity ||
+          "place",
+
+        lat: place.lat,
+        lon: place.lon,
+
+        distance: calculateDistance(
+          Number(lat),
+          Number(lon),
+          place.lat,
+          place.lon
+        ),
+      })
+    );
+
+    return places;
+  } catch (error) {
+    console.log(
+      "❌ OVERPASS REAL ERROR"
+    );
+
+    console.log(
+      "STATUS:",
+      error.response?.status
+    );
+
+    console.log(
+      "MESSAGE:",
+      error.message
+    );
+
+    throw new Error(
+      "Failed to fetch nearby places"
+    );
   }
 };
