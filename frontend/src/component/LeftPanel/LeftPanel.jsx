@@ -19,6 +19,8 @@ const LeftPanel = ({
   setRadius,
   onMobileSelect,
 }) => {
+
+    console.log("LeftPanel places:", places);
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden border-r">
 

@@ -43,7 +43,7 @@ const RouteSearch = ({ liveLocation, onRoute }) => {
   };
 
   return (
-    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] w-[92%] max-w-[420px] bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-gray-200 px-1.5 py-1 flex items-center gap-1">
+    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] w-[92%] max-w-[420px] bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-gray-200 px-1.5 py-1 flex items-center gap-1 mt-22">
       <div className="flex-1 grid grid-cols-2 gap-1">
         <input
           value={from}

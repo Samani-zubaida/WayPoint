@@ -6,51 +6,154 @@ import Login from "./pages/Login.jsx";
 import Chatbot from "./pages/Chatbot.jsx";
 import MapPage from "./pages/MapPage.jsx";
 import Navbar from "./component/Navbar/Navbar.jsx";
+
 import { AuthContext } from "./Context/authContext.jsx";
 
+import Post from "./pages/CreatePost.jsx";
+import ViewPost from "./component/userpost/ViewPost.jsx";
+import Profile from "./component/userpost/profile.jsx";
+import InPost from "./pages/inPost.jsx";
+import EditPost from "./pages/EditPost.jsx";
+import Intro from "./pages/Intro.jsx";
+
 function App() {
-  const { authUser } = useContext(AuthContext);
+  const { authUser, isLoading } =
+    useContext(AuthContext);
+
   const location = useLocation();
 
-  const [showNavbar, setShowNavbar] = useState(false);
+  const [showNavbar, setShowNavbar] =
+    useState(false);
 
-  // Control navbar visibility based on route
   useEffect(() => {
-    if (location.pathname === "/map"  &&  "/create-post") {
-      setShowNavbar(true);
-    } else {
-      setShowNavbar(false);
-    }
+    const navbarRoutes = [
+      "/map",
+      "/create-post",
+      "/explore",
+      "/chatAI",
+    ];
+
+    setShowNavbar(
+      navbarRoutes.includes(
+        location.pathname
+      )
+    );
   }, [location.pathname]);
 
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading...x
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 w-full h-screen bg-[url('/bgImage.svg')] bg-cover bg-no-repeat">
-      <Toaster />
+    <div className="min-h-screen w-full overflow-x-hidden">
+      {showNavbar && (
+        <Navbar authUser={authUser} />
+      )}
 
-      {showNavbar && <Navbar />}
+      <div  >
+        <Routes>
+         
 
-      <Routes>
-        {/* Root redirect */}
-        <Route
-          path="/"
-          element={<Navigate to={authUser ? "/chatAI" : "/login"} />}
-        />
+          <Route
+            path="/login"
+            element={
+              !authUser ? (
+                <Login />
+              ) : (
+                <Navigate to="/create-post" />
+              )
+            }
+          />
 
-        {/* Login */}
-        <Route
-          path="/login"
-          element={!authUser ? <Login /> : <Navigate to="/chatAI" />}
-        />
+          <Route
+            path="/create-post"
+            element={
+              authUser ? (
+                <Post />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
 
-        {/* Protected Chatbot */}
-        <Route
-          path="/chatAI"
-          element={ <Chatbot />}
-        />
+             <Route
+            path="/"
+            element={
+            <Intro /> 
+            }
+          />
 
-        {/* Map */}
-        <Route path="/map" element={<MapPage />} />
-      </Routes>
+          <Route
+            path="/explore"
+            element={
+              authUser ? (
+                <ViewPost />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
+          <Route
+            path="/chatAI"
+            element={
+              authUser ? (
+                <Chatbot />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
+          <Route
+            path="/map"
+            element={
+              authUser ? (
+                <MapPage />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
+          <Route
+            path="/profile/:id"
+            element={
+              authUser ? (
+                <Profile authUser={authUser} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
+          <Route
+            path="/post/:id"
+            element={
+              authUser ? (
+                <InPost />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
+          <Route
+            path="/post/edit/:id"
+            element={
+              authUser ? (
+                <EditPost />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+        </Routes>
+      </div>
     </div>
   );
 }

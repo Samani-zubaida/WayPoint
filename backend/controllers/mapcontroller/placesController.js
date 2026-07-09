@@ -6,9 +6,9 @@ export const fetchNearbyPlaces = async (req, res) => {
       lat,
       lon,
       lng,
-      radius = 500,
     } = req.query;
 
+    const radius = Number(req.query.radius || 500);
     // SUPPORT BOTH lon and lng
     const longitude = lon || lng;
 
@@ -30,7 +30,7 @@ export const fetchNearbyPlaces = async (req, res) => {
       longitude,
       radius
     );
-
+console.log("Radius received:", radius);
     return res.status(200).json({
       success: true,
       data: places,

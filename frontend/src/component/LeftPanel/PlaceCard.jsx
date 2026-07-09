@@ -55,9 +55,9 @@ const PlaceCard = ({ place, onSelect, isSelected }) => {
           {place.name}
         </h4>
 
-        <p className="text-xs text-gray-500 capitalize">
-          {place.type?.replace(/_/g, " ")}
-        </p>
+      <p className="text-xs text-gray-500 capitalize">
+  {(place.placeType || place.type || "Unknown").replace(/_/g, " ")}
+</p>
 
         {place.distance && (
           <p className="text-[11px] text-blue-600 font-medium">

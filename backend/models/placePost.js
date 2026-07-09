@@ -1,35 +1,47 @@
 import mongoose from "mongoose";
+import { CATEGORIES } from "../utils/categories.js";
 
 const placePostSchema = new mongoose.Schema(
-    {
-        imageUrl: {
-            type: String,
-            required: true,
-        },
+  {
+    images: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
 
-        lat: {
-            type: Number,
-            required: true,
-        },
-
-        lng: {
-            type: Number,
-            required: true,
-        },
-
-        placeId: {
-            type: String,
-            required: true,
-            index: true, // critical for fast lookup
-        },
-
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-        },
+    lat: {
+      type: Number,
+      required: true,
     },
-    { timestamps: true }
+
+    lng: {
+      type: Number,
+      required: true,
+    },
+
+    placeId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    category: {
+      type: String,
+      enum: CATEGORIES,
+      default: "Other",
+      required: true,
+    },
+
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
 export default mongoose.model("PlacePost", placePostSchema);

@@ -3,9 +3,7 @@ import React, { useMemo, useState, lazy, Suspense, useCallback } from "react";
 import LeftPanel from "../LeftPanel/LeftPanel";
 import StreetImages from "../RightPanel/StreetImages";
 import { useNearbyPlaces } from "../../hooks/useNearbyPlaces";
-
-const Map = lazy(() => import("../Map/MapContainer"));
-
+import Map from "../Map/MapContainer"
 const Layout = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -54,6 +52,8 @@ const Layout = () => {
     setShowRight(false);
   }, []);
 
+  console.log("Layout places:", places);
+  console.log("Nearby result:", nearbyResult);
   return (
     <div className="h-screen w-full flex overflow-hidden bg-gray-100 relative">
       {/* MOBILE BUTTONS */}

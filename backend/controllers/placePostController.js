@@ -1,27 +1,46 @@
 import PlacePost from "../models/placePost.js";
 import { uploadImage } from "../services/imageUpload.js";
 
-export const createPlacePost = async (req, res) => {
+export const createPlacePost = async (
+  req,
+  res
+) => {
   try {
-    const { lat, lng, placeId } = req.body;
+    const { lat, lng, placeId } =
+      req.body;
 
-    if (!req.file || !lat || !lng || !placeId) {
-      return res.status(400).json({ message: "Missing data" });
+    if (
+      !req.files?.length ||
+      !lat ||
+      !lng ||
+      !placeId
+    ) {
+      return res.status(400).json({
+        message: "Missing data",
+      });
     }
 
-    const imageUrl = await uploadImage(req.file.path);
+    const imageUrls =
+      await Promise.all(
+        req.files.map((file) =>
+          uploadImage(file.path)
+        )
+      );
 
-    const post = await PlacePost.create({
-      imageUrl,
-      lat,
-      lng,
-      placeId,
-      userId: req.user.id, 
-    });
+    const post =
+      await PlacePost.create({
+        images: imageUrls,
+        lat,
+        lng,
+        placeId,
+        userId: req.user.id,
+      });
 
     res.status(201).json(post);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

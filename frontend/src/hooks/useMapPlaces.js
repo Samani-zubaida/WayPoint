@@ -25,13 +25,32 @@ export const useMapPlaces = (
       ) {
         return false;
       }
+      console.log({
+        name: p.name,
+        lat: p.lat,
+        lng: p.lng,
+        lon: p.lon,
+      });
+      const centerLat = Number(center.lat);
+      const centerLng = Number(center.lng);
+
+      const placeLat = Number(p.lat);
+      const placeLng = Number(p.lng ?? p.lon);
+
+      console.log("CENTER");
+      console.log(centerLat, centerLng);
+
+      console.log("PLACE");
+      console.log(placeLat, placeLng);
 
       const distance = getDistance(
-        center.lat,
-        center.lon,
-        p.lat,
-        p.lon
+        centerLat,
+        centerLng,
+        placeLat,
+        placeLng
       );
+
+      console.log("DISTANCE:", distance);
 
       return distance <= radius;
     });

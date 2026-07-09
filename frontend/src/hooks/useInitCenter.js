@@ -1,16 +1,24 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export const useInitCenter = (
   liveLocation,
   center,
   setCenter
 ) => {
+  const initialized = useRef(false);
+
   useEffect(() => {
-    if (!center && liveLocation) {
-      setCenter({
-        lat: liveLocation.lat,
-        lng: liveLocation.lng,
-      });
-    }
-  }, [liveLocation, center, setCenter]);
+    // Wait until GPS is available
+    if (!liveLocation) return;
+
+    // Only initialize once
+    if (initialized.current) return;
+
+    setCenter({
+      lat: liveLocation.lat,
+      lng: liveLocation.lng,
+    });
+
+    initialized.current = true;
+  }, [liveLocation, setCenter]);
 };

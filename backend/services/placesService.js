@@ -12,9 +12,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
     Math.cos(φ1) *
-      Math.cos(φ2) *
-      Math.sin(Δλ / 2) *
-      Math.sin(Δλ / 2);
+    Math.cos(φ2) *
+    Math.sin(Δλ / 2) *
+    Math.sin(Δλ / 2);
 
   const c =
     2 *
@@ -36,12 +36,13 @@ export const getNearbyPlaces = async (
 
     const query = `
 [out:json][timeout:25];
-node
-  (around:${radius},${lat},${lon})
-  ["amenity"];
-out body 40;
-`;
 
+(
+  node["amenity"](around:${radius},${lat},${lon});
+);
+
+out body;
+`;
     const response = await axios.post(
       "https://overpass-api.de/api/interpreter",
       query,

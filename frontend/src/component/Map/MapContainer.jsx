@@ -6,12 +6,12 @@ import {
   Popup,
   Polyline,
   TileLayer,
+  Circle,
 } from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
 
 import useLiveLocation from "../../hooks/useLiveLocation";
-
 import { useInitCenter } from "../../hooks/useInitCenter";
 import { useRoute } from "../../hooks/useRoute";
 import { useMapPlaces } from "../../hooks/useMapPlaces";
@@ -23,21 +23,21 @@ import { useRemainingRoute } from "../../hooks/useRemainingRoute";
 import { FixLeafletResize } from "../../services/FixLeafletResize";
 
 import { icons } from "./MapIcons";
-import SearchPlace from "./SearchPLace";
+import SearchPlace from "./SearchPlace";
 import RouteSearch from "./RoutesSearch";
+import MapUpdater from "./MapUpdater";
 
 import { NORMAL_TILES, ROUTE_TILES } from "../../services/mapTiles";
 
 const speak = (text) => {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
+  if (!("speechSynthesis" in window)) return;
 
-    const utterance = new SpeechSynthesisUtterance(text);
+  window.speechSynthesis.cancel();
 
-    utterance.rate = 1.1;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.1;
 
-    window.speechSynthesis.speak(utterance);
-  }
+  window.speechSynthesis.speak(utterance);
 };
 
 const MapView = ({
@@ -59,6 +59,7 @@ const MapView = ({
   useInitCenter(liveLocation, center, setCenter);
 
   const fromPoint = useFromPoint(manualRoute, liveLocation);
+
   const toPoint = useToPoint(manualRoute, selectedPlace);
 
   const route = useRoute(fromPoint, toPoint);
@@ -73,12 +74,17 @@ const MapView = ({
 
   const normalizedPlaces = useMemo(() => {
     return places
-      .filter((p) => p?.lat && (p?.lng || p?.lon))
+      .filter(
+        (p) =>
+          p &&
+          p.lat !== undefined &&
+          (p.lng !== undefined || p.lon !== undefined),
+      )
       .map((p) => ({
         ...p,
         lat: Number(p.lat),
         lng: Number(p.lng ?? p.lon),
-        placeType: p.placeType || p.type || "default",
+        placeType: p.placeType ?? p.type ?? "default",
       }));
   }, [places]);
 
@@ -96,7 +102,8 @@ const MapView = ({
   }, []);
 
   useEffect(() => {
-    if (!liveLocation || !mapPlaces.length) return;
+    if (!liveLocation) return;
+    if (!mapPlaces.length) return;
 
     mapPlaces.forEach((place) => {
       const distSq =
@@ -116,56 +123,79 @@ const MapView = ({
   }, [liveLocation, mapPlaces, announcedIds]);
 
   const markers = useMemo(() => {
-    return mapPlaces.map((p) => (
+    return mapPlaces.map((place) => (
       <Marker
-        key={p.id}
-        position={[p.lat, p.lng]}
-        icon={icons[p.placeType] || icons.default}
+        key={place.id}
+        position={[place.lat, place.lng]}
+        icon={icons[place.placeType] ?? icons.default}
+        eventHandlers={{
+          click: () => {
+            setSelectedPlace(place);
+
+            setCenter({
+              lat: place.lat,
+              lng: place.lng,
+            });
+          },
+        }}
       >
-        <Popup>{p.name}</Popup>
+        <Popup>
+          <div className="min-w-[180px]">
+            <h3 className="font-semibold text-base">{place.name}</h3>
+
+            <p className="text-gray-500 capitalize">
+              {place.placeType.replace(/_/g, " ")}
+            </p>
+          </div>
+        </Popup>
       </Marker>
     ));
-  }, [mapPlaces]);
+  }, [mapPlaces, setCenter, setSelectedPlace]);
 
   if (!center) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         Initializing Map...
       </div>
     );
   }
 
-  return (
-    <div className="h-full w-full">
-      <MapContainer
-        center={[center.lat, center.lng]}
-        zoom={15}
-        preferCanvas={true}
-        className="h-full w-full"
-      >
-        <FixLeafletResize />
+  console.log("Center:", center);
+console.log("Live:", liveLocation);
 
+
+  return (
+    <div className="relative h-full w-full">
+      {/* Search bar outside */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[2000]">
         <SearchPlace
           onSearch={(place) => {
-            // UPDATE MAP CENTER
             setCenter({
               lat: place.lat,
               lng: place.lng,
             });
 
-            // VERY IMPORTANT
-            // UPDATE SELECTED PLACE
-            if (setSelectedPlace) {
-              setSelectedPlace(place);
-            }
+            setSelectedPlace(place);
 
-            // RESET ROUTE
             setManualRoute(null);
             setNavigationOn(false);
 
             speak(`Showing nearby places around ${place.name}`);
           }}
         />
+      </div>
+
+      <MapContainer
+        center={[center.lat, center.lng]}
+        zoom={16}
+        className="h-full w-full"
+        zoomControl={false}
+      >
+        <FixLeafletResize />
+
+        <MapUpdater center={center} />
+
+        {/* KEEP THIS INSIDE */}
         <RouteSearch
           liveLocation={liveLocation}
           onRoute={(from, to) => {
@@ -192,11 +222,20 @@ const MapView = ({
           <Marker
             position={[liveLocation.lat, liveLocation.lng]}
             icon={icons.user}
-          >
-            <Popup>You are here</Popup>
-          </Marker>
+          />
         )}
-
+        {center && (
+          <Circle
+            center={[center.lat, center.lng]}
+            radius={radius}
+            pathOptions={{
+              color: "#2563eb",
+              fillColor: "#3b82f6",
+              fillOpacity: 0.12,
+              weight: 2,
+            }}
+          />
+        )}
         {markers}
 
         {hasRoute && (

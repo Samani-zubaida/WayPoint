@@ -2,7 +2,7 @@ import axios from "axios";
 import { createContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL; // your backend URL
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 axios.defaults.baseURL = backendUrl;
 
 export const AuthContext = createContext();
@@ -10,79 +10,127 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
-  // Set Axios header globally whenever token changes
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Set Authorization header whenever token changes
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${token}`;
     } else {
       delete axios.defaults.headers.common["Authorization"];
     }
   }, [token]);
 
-  // Check auth on app load
   const checkAuth = async () => {
     try {
       const storedToken = localStorage.getItem("token");
-      if (!storedToken) return;
 
-      const { data } = await axios.get("/api/users/check-auth");
-      console.log("data",data.success);
-      if(data.success) {
-         setAuthUser(data.user);
-        console.log("user = ",data.user);
-        console.log("auth user is",authUser);
-        console.log("succes data",data);
-        setToken(storedToken); // ensure axios header is set
+      if (!storedToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      axios.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${storedToken}`;
+
+      const { data } = await axios.get(
+        "/api/users/check-auth"
+      );
+
+      if (data.success) {
+        setAuthUser(data.user);
+        setToken(storedToken);
       }
     } catch (err) {
-      console.log("Auth check error:", err.response?.data || err.message);
-      toast.error(err.response?.data?.message || "Authentication failed");
+      console.log(
+        "Auth check error:",
+        err.response?.data || err.message
+      );
+
       setAuthUser(null);
       setToken(null);
       localStorage.removeItem("token");
+      delete axios.defaults.headers.common[
+        "Authorization"
+      ];
+
+      toast.error(
+        err.response?.data?.message ||
+          "Authentication failed"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Login / signup
   const login = async (state, credentials) => {
     try {
-      const { data } = await axios.post(`/api/users/${state}`, credentials);
+      const { data } = await axios.post(
+        `/api/users/${state}`,
+        credentials
+      );
 
-      if (data.success && data.token && data.user) {
+      if (data.success) {
         setAuthUser(data.user);
-        console.log("login : ",authUser);
         setToken(data.token);
-        localStorage.setItem("token", data.token);
 
-        toast.success(data.message || "Logged in successfully");
+        localStorage.setItem(
+          "token",
+          data.token
+        );
+
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${data.token}`;
+
+        toast.success(
+          data.message ||
+            "Logged in successfully"
+        );
       } else {
-        toast.error(data.message || "Login failed");
+        toast.error(
+          data.message || "Login failed"
+        );
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      toast.error(
+        err.response?.data?.message ||
+          "Something went wrong"
+      );
     }
   };
 
-  // Logout
   const logout = () => {
     setAuthUser(null);
     setToken(null);
+
     localStorage.removeItem("token");
-    delete axios.defaults.headers.common["Authorization"];
+
+    delete axios.defaults.headers.common[
+      "Authorization"
+    ];
+
     toast.success("Logged out successfully");
   };
 
   useEffect(() => {
     checkAuth();
   }, []);
-  
-  console.log("final check",authUser);
+
   const value = {
     authUser,
     token,
     login,
     logout,
+    isLoading,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

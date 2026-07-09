@@ -8,16 +8,16 @@ export const ChatProvider = ({ children }) => {
   const { authUser } = useContext(AuthContext);
   const userId = authUser?._id;
 
-  const [newChat, setNewChat] = useState(false);
-  const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [sending, setSending] = useState(false);
 
-  // ✅ conversation history list
   const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+
+  const [newChat, setNewChat] = useState(false);
 
   /* --------------------------------------------------
-     FETCH ALL CONVERSATIONS (HISTORY)
+     FETCH ALL CONVERSATIONS
   -------------------------------------------------- */
   useEffect(() => {
     if (!userId) return;
@@ -25,10 +25,9 @@ export const ChatProvider = ({ children }) => {
     const fetchConversations = async () => {
       try {
         const res = await axios.get(`/api/conversations/user/${userId}`);
-        console.log(res);
         setConversations(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error("Fetch conversations error:", err);
+      } catch (error) {
+        console.error("Fetch conversations error:", error);
         setConversations([]);
       }
     };
@@ -37,105 +36,112 @@ export const ChatProvider = ({ children }) => {
   }, [userId]);
 
   /* --------------------------------------------------
-     CREATE NEW CONVERSATION
+     RESET FOR NEW CHAT
   -------------------------------------------------- */
   useEffect(() => {
-    if (!newChat || !userId) return;
-
-    const createNewChat = async () => {
-      try {
-        const res = await axios.post("/api/conversations", { userId });
-        console.log("res =",res);
-
-        setConversationId(res.data._id);
-        setMessages([]);
-        setConversations((prev) => [res.data, ...prev]);
-        setNewChat(false);
-      } catch (err) {
-        console.error("Create conversation error:", err);
-      }
-    };
-
-    createNewChat();
-  }, [newChat, userId]);
+    if (newChat) {
+      setActiveConversationId(null);
+      setMessages([]);
+      setNewChat(false);
+    }
+  }, [newChat]);
 
   /* --------------------------------------------------
-     LOAD ONE CONVERSATION (MESSAGES)
+     LOAD CONVERSATION
   -------------------------------------------------- */
-  const loadConversation = async (convId) => {
+  const loadConversation = async (conversationId) => {
     try {
-      const res = await axios.get(`/api/conversations/chat/${convId}`);
+      const res = await axios.get(
+        `/api/conversations/chat/${conversationId}`
+      );
 
-      setConversationId(convId);
+      setActiveConversationId(conversationId);
       setMessages(res.data?.messages || []);
-    } catch (err) {
-      console.error("Load conversation error:", err);
+    } catch (error) {
+      console.error("Load conversation error:", error);
       setMessages([]);
     }
   };
 
   /* --------------------------------------------------
-     SEND MESSAGE TO AI
+     SEND MESSAGE
   -------------------------------------------------- */
-  const sendToAI = async (text) => {
-    const res = await axios.post("/api/chat/ai", {
-      userId,
-      message: text,
-      conversationId,
-    });
-   
-    setConversationId(res.data.conversationId);
-    console.log(res.data);
-    return res.data.reply;
+  const sendMessage = async (text) => {
+    if (!text.trim() || !userId) return;
+
+    setSending(true);
+    let conversationId = activeConversationId;
+
+    try {
+      // Create new conversation if none active
+      if (!conversationId) {
+        const convRes = await axios.post("/api/conversations", { userId });
+        conversationId = convRes.data._id;
+
+        setActiveConversationId(conversationId);
+        setConversations((prev) => [convRes.data, ...prev]);
+        setMessages([]);
+      }
+
+      // User message
+      setMessages((prev) => [
+        ...prev,
+        { sender: "user", content: text },
+      ]);
+
+      const aiRes = await axios.post("/api/chat/ai", {
+        userId,
+        message: text,
+        conversationId,
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", content: aiRes.data.reply || "No reply from AI" },
+      ]);
+    } catch (error) {
+      console.error("Send message error:", error);
+    } finally {
+      setSending(false);
+    }
   };
 
   /* --------------------------------------------------
-     SEND MESSAGE (USER + BOT)
+     DELETE CONVERSATION
   -------------------------------------------------- */
-  const sendMessage = async (text) => {
-  if (!text.trim()) return;
+  const deleteConversation = async (conversationId) => {
+    try {
+      await axios.delete(`/api/conversations/${conversationId}`);
 
-  setSending(true);
+      setConversations((prev) =>
+        prev.filter((c) => c._id !== conversationId)
+      );
 
-  setMessages((prev) => [
-    ...prev,
-    { sender: "user", content: text },
-  ]);
-
-  try {
-    const aiReply = await sendToAI(text);
-
-    setMessages((prev) => [
-      ...prev,
-      { sender: "bot", content: aiReply || "No reply from AI" },
-    ]);
-  } catch (error) {
-    console.error("AI Error:", error);
-    setMessages((prev) => [
-      ...prev,
-      { sender: "bot", content: "⚠️ AI error. Try again." },
-    ]);
-  } finally {
-    setSending(false);
-  }
-};
-
+      if (conversationId === activeConversationId) {
+        setActiveConversationId(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error("Delete conversation failed:", error);
+    }
+  };
 
   return (
     <ChatContext.Provider
       value={{
         messages,
-        sendMessage,
         sending,
-
-        newChat,
-        setNewChat,
-
-        conversationId,
-        setConversationId,
+        sendMessage,
 
         conversations,
         loadConversation,
+        deleteConversation,
+
+        activeConversationId,
+        setActiveConversationId,
+
+        newChat,
+        setNewChat,
       }}
     >
       {children}

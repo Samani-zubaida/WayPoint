@@ -13,11 +13,7 @@ const PlaceList = ({
   center,
   onMobileSelect,
 }) => {
-  const filteredData = useFilteredPlaces(
-    places,
-    selectedCategory,
-    center
-  );
+  const filteredData = useFilteredPlaces(places, selectedCategory, center);
 
   const categories = useCategories(places);
 
@@ -29,10 +25,7 @@ const PlaceList = ({
 
   const renderedPlaces = useMemo(() => {
     return filteredData.map((place) => (
-      <div
-        key={place.id}
-        ref={(el) => (cardRefs.current[place.id] = el)}
-      >
+      <div key={place.id} ref={(el) => (cardRefs.current[place.id] = el)}>
         <PlaceCard
           place={place}
           isSelected={selectedPlace?.id === place.id}
@@ -52,7 +45,7 @@ const PlaceList = ({
       </div>
     );
   }
-
+  console.log("Center:", center);
   return (
     <div className="h-full flex flex-col p-4 bg-white relative">
       <div className="flex items-center justify-between mb-4 pt-8 md:pt-0">

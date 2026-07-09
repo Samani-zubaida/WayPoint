@@ -1,10 +1,9 @@
 @import "tailwindcss";
-@plugin '@tailwindcss/typography';
+
 .diagonal-bg {
   @apply bg-gradient-to-r from-gray-800 to-blue-900;
   clip-path: polygon(0 0, 40% 0, 2% 100%, 0 100%);
 }
-
 
 .leaflet-marker-icon {
   transition: transform 0.3s ease;
@@ -16,4 +15,91 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: black;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+body {
+  background: #020617;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide horizontal scrollbar */
+body,
+html,
+#root {
+  overflow-x: hidden;
+}
+
+/* Selection */
+::selection {
+  background: rgba(103, 232, 249, .3);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.no-scrollbar::-webkit-scrollbar{
+display:none;
+}
+
+.no-scrollbar{
+-ms-overflow-style:none;
+scrollbar-width:none;
+}
+
+.masonry-grid{
+display:flex;
+margin-left:-20px;
+width:auto;
+}
+
+.masonry-grid_column{
+padding-left:20px;
+background-clip:padding-box;
+}
+
+.masonry-grid_column>div{
+margin-bottom:20px;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 export const useNearbyPlaces = (
@@ -6,114 +6,59 @@ export const useNearbyPlaces = (
   radius = 500
 ) => {
   const [data, setData] = useState([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState(null);
-
-  // store previous coordinates
-  const prevCoordsRef = useRef({
-    lat: null,
-    lng: null,
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // safety check
-    if (
-      !center ||
-      center.lat == null ||
-      center.lng == null
-    ) {
-      return;
-    }
+    if (!center) return;
+    if (center.lat == null || center.lng == null) return;
 
-    // prevent duplicate fetches
-    if (
-      prevCoordsRef.current.lat ===
-        center.lat &&
-      prevCoordsRef.current.lng ===
-        center.lng
-    ) {
-      console.log(
-        "⏱️ Same location, skipping request"
-      );
-
-      return;
-    }
-
-    // save current coords
-    prevCoordsRef.current = {
-      lat: center.lat,
-      lng: center.lng,
-    };
+    let ignore = false;
 
     const fetchPlaces = async () => {
       try {
         setLoading(true);
-
         setError(null);
 
-        console.log(
-          "📡 Fetching nearby places..."
+        console.log("Fetching nearby places...");
+        console.log("Center:", center);
+        console.log("Radius:", radius);
+
+        const res = await axios.get(
+          "http://localhost:5000/api/map/places/nearby",
+          {
+            params: {
+              lat: center.lat,
+              lon: center.lng,
+              radius,
+            },
+            timeout: 20000,
+          }
         );
 
-        console.log("CENTER:", center);
-
-        const response =
-          await axios.get(
-            "http://localhost:5000/api/map/places/nearby",
-            {
-              params: {
-                lat: center.lat,
-
-                // backend expects lon
-                lon: center.lng,
-
-                radius,
-              },
-
-              timeout: 20000,
-            }
-          );
-
-        console.log(
-          "✅ Nearby Places Success"
-        );
-
-        console.log(response.data);
-
-        setData(
-          response.data?.data || []
-        );
+        if (!ignore) {
+          setData(res.data?.data || []);
+        }
       } catch (err) {
-        console.log(
-          "❌ Nearby Places Error"
-        );
+        console.error(err);
 
-        console.log(
-          err.response?.data
-        );
-
-        console.log(err.message);
-
-        setError(
-          err.response?.data ||
-            err.message
-        );
+        if (!ignore) {
+          setError(err.response?.data || err.message);
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     };
 
     fetchPlaces();
-  }, [
-    center?.lat,
-    center?.lng,
-    radius,
-  ]);
 
+    return () => {
+      ignore = true;
+    };
+  }, [center?.lat, center?.lng, radius]);
+console.log("Radius received:", radius);
   return {
     data,
     loading,

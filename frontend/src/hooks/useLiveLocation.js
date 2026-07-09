@@ -6,12 +6,13 @@ const DEFAULT_LOCATION = {
 };
 
 const useLiveLocation = () => {
-  const [location, setLocation] = useState(DEFAULT_LOCATION);
+  // Start with no location
+  const [location, setLocation] = useState(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
       console.log("Geolocation not supported");
-
+      setLocation(DEFAULT_LOCATION);
       return;
     }
 
@@ -20,7 +21,7 @@ const useLiveLocation = () => {
         const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-          heading: position.coords.heading || 0,
+          heading: position.coords.heading ?? 0,
         };
 
         console.log("📍 Live Location:", newLocation);
@@ -31,20 +32,18 @@ const useLiveLocation = () => {
       (error) => {
         console.error("❌ Geolocation Error:", error);
 
-        // FALLBACK LOCATION
+        // Only use fallback if GPS fails
         setLocation(DEFAULT_LOCATION);
       },
 
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 5000,
+        maximumAge: 0,
       }
     );
 
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
   return location;
