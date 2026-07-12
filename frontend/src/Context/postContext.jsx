@@ -83,7 +83,6 @@ export const PostProvider = ({ children }) => {
       console.log("Status:", err.response?.status);
       console.log("Response:", err.response?.data);
       console.log(err);
-      const [category, setCategory] = useState("");
       setError(
         err.response?.data?.message || err.message || "Something went wrong",
       );

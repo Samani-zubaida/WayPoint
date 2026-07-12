@@ -1,137 +1,452 @@
 import { useState } from "react";
 import { useChat } from "../../Context/ChatContext.jsx";
-import { Plus, ChevronsLeft, ChevronsRight, MoreVertical } from "lucide-react";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import {
+  Plus,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreVertical,
+  MessageSquare,
+  Trash2,
+} from "lucide-react";
+
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+} from "@headlessui/react";
+
 
 const SideBar = ({ showSidebar, isMin, setIsMin }) => {
-  const { setNewChat, conversations, loadConversation,deleteConversation } = useChat();
+  const {
+    setNewChat,
+    conversations,
+    loadConversation,
+    deleteConversation,
+  } = useChat();
+
   const [activeId, setActiveId] = useState(null);
 
+
   return (
-    <div
+    <aside
       className={`
-        bg-gradient-to-b from-white via-gray-100 to-white
-        backdrop-blur-xl shadow-2xl
-        flex flex-col transition-all duration-300
-        min-h-0                 /* 🔑 REQUIRED FOR SCROLL */
-        overflow-y-auto
-        ${isMin ? "w-[40px]" : "w-[260px]"}
-        ${showSidebar ? "block" : "hidden md:block"}
+        h-full
+        flex flex-col
+        bg-[#111827]
+        border-r border-white/10
+        shadow-2xl
+        transition-all duration-300 ease-in-out
+        overflow-hidden
+        
+        ${isMin ? "w-[70px]" : "w-[290px]"}
+        ${showSidebar ? "block" : "hidden md:flex"}
       `}
     >
-      {/* Header (fixed height) */}
+
+
+      {/* ================= HEADER ================= */}
+
       <div
-        className={`px-2 py-4 flex shrink-0 ${
-          isMin ? "flex-col items-center gap-2" : "items-center justify-between"
-        }`}
+        className={`
+          flex items-center
+          px-4 py-4
+          border-b border-white/10
+          shrink-0
+
+          ${
+            isMin
+              ? "flex-col gap-5"
+              : "justify-between"
+          }
+        `}
       >
+
+
+        {/* NEW CHAT BUTTON */}
+
         <button
           onClick={() => {
             setNewChat(true);
             setActiveId(null);
           }}
-          className={`flex items-center justify-center gap-2 rounded-xl
-            bg-gradient-to-r from-purple-600 to-indigo-600
-            text-white shadow transition
-            ${isMin ? "p-2" : "px-3 py-2 text-sm"}
+          className={`
+            flex items-center justify-center gap-2
+            rounded-xl
+            bg-purple-600
+            hover:bg-purple-700
+            text-white
+            shadow-lg
+            transition-all
+            active:scale-95
+
+            ${
+              isMin
+                ? "p-3"
+                : "px-4 py-2.5 w-full"
+            }
           `}
         >
-          <Plus className="w-4 h-4" />
-          {!isMin && <span>New Chat</span>}
+
+          <Plus size={18}/>
+
+          {!isMin && (
+            <span className="text-sm font-medium">
+              New Chat
+            </span>
+          )}
+
         </button>
+
+
+
+        {/* COLLAPSE BUTTON */}
 
         <button
           onClick={() => setIsMin(!isMin)}
-          className="p-1.5 rounded-lg hover:bg-purple-100 transition"
-        >
-          {isMin ? (
-            <ChevronsRight className="w-4 h-4 text-purple-700" />
-          ) : (
-            <ChevronsLeft className="w-4 h-4 text-purple-700" />
-          )}
-        </button>
-      </div>
-
-      {/* Conversations (scrollable) */}
-      {!isMin && (
-        <div
           className="
-            flex-1 min-h-0        /* 🔑 REQUIRED */
-            px-3 pt-2 pb-6
-            space-y-2
-            overflow-y-auto
-            scrollbar-thin
-            scrollbar-thumb-purple-300
-            scrollbar-track-transparent 
-            auto-scroll
+            p-2
+            rounded-lg
+            text-gray-300
+            hover:bg-white/10
+            hover:text-white
+            transition
           "
         >
-          {conversations.map((conv) => {
-            const isActive = activeId === conv._id;
 
-            return (
+          {
+            isMin
+            ?
+            <ChevronsRight size={18}/>
+            :
+            <ChevronsLeft size={18}/>
+          }
+
+        </button>
+
+      </div>
+
+
+
+
+
+
+      {/* ================= CHAT LIST ================= */}
+
+
+      {!isMin && (
+
+        <div
+          className="
+            flex-1
+            overflow-y-auto
+            px-3
+            py-4
+            space-y-2
+
+            scrollbar-thin
+            scrollbar-thumb-gray-700
+          "
+        >
+
+
+          <p
+            className="
+              text-xs
+              text-gray-500
+              uppercase
+              tracking-wider
+              px-2
+              mb-3
+            "
+          >
+            Conversations
+          </p>
+
+
+
+          {
+            conversations.length === 0
+            ?
+
+            (
               <div
-                key={conv._id}
-                onClick={() => {
-                  loadConversation(conv._id);
-                  setActiveId(conv._id);
-                }}
-                className={`
-                  flex items-center justify-between gap-2
-                  px-3 py-2 rounded-xl cursor-pointer
-                  bg-white/70 text-sm shadow-md
-                  transition-all duration-200
-                  hover:bg-purple-100 hover:-translate-y-[2px]
-                  ${isActive ? "ring-2 ring-purple-400 bg-white" : ""}
-                `}
+                className="
+                  flex
+                  flex-col
+                  items-center
+                  justify-center
+                  text-gray-500
+                  mt-10
+                  gap-2
+                "
               >
-                {/* Chat title */}
-                <span className="truncate max-w-[170px]">
-                  {conv.messages?.[0]?.content || "Chit Chat"}
-                </span>
 
-                {/* Menu */}
-                <Menu as="div" className="relative shrink-0">
-                  <MenuButton
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1 rounded-md hover:bg-gray-200"
-                  >
-                    <MoreVertical className="w-4 h-4 text-gray-600" />
-                  </MenuButton>
+                <MessageSquare size={28}/>
 
-                  <MenuItems
+                <p className="text-sm">
+                  No chats yet
+                </p>
+
+              </div>
+            )
+
+
+            :
+
+            conversations.map((conv)=>{
+
+
+              const isActive =
+                activeId === conv._id;
+
+
+
+              return (
+
+                <div
+                  key={conv._id}
+
+                  onClick={()=>{
+                    loadConversation(conv._id);
+                    setActiveId(conv._id);
+                  }}
+
+                  className={`
+                    group
+                    flex
+                    items-center
+                    justify-between
+                    gap-2
+
+                    px-3
+                    py-3
+
+                    rounded-xl
+                    cursor-pointer
+
+                    transition-all
+                    duration-200
+
+
+                    ${
+                      isActive
+
+                      ?
+
+                      `
+                      bg-purple-600/20
+                      border
+                      border-purple-500/40
+                      text-white
+                      `
+
+                      :
+
+                      `
+                      bg-white/5
+                      text-gray-300
+                      hover:bg-white/10
+                      `
+                    }
+
+                  `}
+                >
+
+
+
+                  {/* TITLE */}
+
+
+                  <div
                     className="
-                      absolute right-0 z-20 mt-2 w-28
-                      rounded-md bg-white shadow-lg
-                      ring-1 ring-black/10
+                      flex
+                      items-center
+                      gap-3
+                      min-w-0
                     "
                   >
-                    <MenuItem>
-                      {({ active }) => (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteConversation(conv._id);
-                          }}
-                          className={`
-    w-full px-3 py-2 text-sm text-left
-    text-red-600
-    ${active ? "bg-red-50" : ""}
-  `}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </MenuItem>
-                  </MenuItems>
-                </Menu>
-              </div>
-            );
-          })}
+
+                    <div
+                      className="
+                        p-2
+                        rounded-lg
+                        bg-white/10
+                      "
+                    >
+                      <MessageSquare
+                        size={15}
+                      />
+                    </div>
+
+
+                    <span
+                      className="
+                        truncate
+                        text-sm
+                      "
+                    >
+                      {
+                        conv.messages?.[0]?.content
+                        ||
+                        "Chit Chat"
+                      }
+
+                    </span>
+
+
+                  </div>
+
+
+
+
+
+                  {/* MENU */}
+
+
+                  <Menu
+                    as="div"
+                    className="relative"
+                  >
+
+                    <MenuButton
+
+                      onClick={(e)=>
+                        e.stopPropagation()
+                      }
+
+                      className="
+                        opacity-0
+                        group-hover:opacity-100
+
+                        p-1.5
+
+                        rounded-lg
+
+                        hover:bg-white/10
+
+                        transition
+                      "
+                    >
+
+                      <MoreVertical
+                        size={16}
+                      />
+
+                    </MenuButton>
+
+
+
+
+
+                    <MenuItems
+
+                      className="
+                        absolute
+                        right-0
+                        top-8
+                        z-50
+
+                        w-32
+
+                        rounded-xl
+
+                        bg-[#1f2937]
+
+                        border
+                        border-white/10
+
+                        shadow-xl
+
+                        overflow-hidden
+
+                        focus:outline-none
+                      "
+                    >
+
+
+                      <MenuItem>
+
+                        {
+                          ({active})=>(
+
+                            <button
+
+                              onClick={(e)=>{
+
+                                e.stopPropagation();
+
+                                deleteConversation(
+                                  conv._id
+                                );
+
+                              }}
+
+                              className={`
+                                w-full
+
+                                flex
+                                items-center
+                                gap-2
+
+                                px-3
+                                py-2
+
+                                text-sm
+
+                                text-red-400
+
+                                ${
+                                  active
+                                  ?
+                                  "bg-red-500/10"
+                                  :
+                                  ""
+                                }
+
+                              `}
+                            >
+
+                              <Trash2
+                                size={15}
+                              />
+
+                              Delete
+
+
+                            </button>
+
+                          )
+                        }
+
+                      </MenuItem>
+
+
+                    </MenuItems>
+
+
+                  </Menu>
+
+
+                </div>
+
+              )
+
+
+            })
+
+          }
+
+
         </div>
+
       )}
-    </div>
+
+
+
+    </aside>
   );
 };
+
 
 export default SideBar;

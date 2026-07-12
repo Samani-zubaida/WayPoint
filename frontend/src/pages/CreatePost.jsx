@@ -36,6 +36,15 @@ const handleSubmit = (e) => {
     console.log(pair[0], pair[1]);
   }
 
+  console.log({
+  title,
+  description,
+  place,
+  category,
+  images,
+  video,
+});
+
   createPost(formData);
 };
 
