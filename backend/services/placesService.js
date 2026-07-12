@@ -12,9 +12,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
     Math.cos(φ1) *
-    Math.cos(φ2) *
-    Math.sin(Δλ / 2) *
-    Math.sin(Δλ / 2);
+      Math.cos(φ2) *
+      Math.sin(Δλ / 2) *
+      Math.sin(Δλ / 2);
 
   const c =
     2 *
@@ -32,74 +32,73 @@ export const getNearbyPlaces = async (
   radius = 500
 ) => {
   try {
-    console.log("📡 Calling Overpass API...");
+    console.log("=================================");
+    console.log("📡 Calling Overpass API");
+    console.log("Latitude :", lat);
+    console.log("Longitude:", lon);
+    console.log("Radius   :", radius);
+    console.log("=================================");
 
     const query = `
 [out:json][timeout:25];
 
 (
   node["amenity"](around:${radius},${lat},${lon});
+  way["amenity"](around:${radius},${lat},${lon});
+  relation["amenity"](around:${radius},${lat},${lon});
 );
 
-out body;
+out center;
 `;
+
+    // Better Overpass mirror than overpass-api.de
     const response = await axios.post(
-      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter",
       query,
       {
         headers: {
           "Content-Type": "text/plain",
-          "User-Agent":
-            "NearbyExplorer/1.0",
         },
-
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 
-    console.log("✅ OVERPASS SUCCESS");
+    console.log("✅ Overpass Success");
 
-    const elements =
-      response.data.elements || [];
+    const elements = response.data?.elements || [];
 
-    const places = elements.map(
-      (place) => ({
-        id: place.id,
+    const places = elements.map((place) => ({
+      id: place.id,
 
-        name:
-          place.tags?.name ||
-          "Unnamed Place",
+      name: place.tags?.name || "Unnamed Place",
 
-        type:
-          place.tags?.amenity ||
-          "place",
+      type: place.tags?.amenity || "place",
 
-        lat: place.lat,
-        lon: place.lon,
+      lat: place.lat ?? place.center?.lat,
 
-        distance: calculateDistance(
-          Number(lat),
-          Number(lon),
-          place.lat,
-          place.lon
-        ),
-      })
-    );
+      lon: place.lon ?? place.center?.lon,
+
+      distance: calculateDistance(
+        Number(lat),
+        Number(lon),
+        place.lat ?? place.center?.lat,
+        place.lon ?? place.center?.lon
+      ),
+    }));
+
+    console.log(`✅ Found ${places.length} places`);
 
     return places;
-  }  catch (error) {
-  console.error("❌ OVERPASS REAL ERROR");
+  } catch (error) {
+    console.log("=================================");
+    console.log("❌ OVERPASS ERROR");
+    console.log("Message :", error.message);
+    console.log("Code    :", error.code);
+    console.log("Status  :", error.response?.status);
+    console.log("Data    :", error.response?.data);
+    console.log("Stack   :", error.stack);
+    console.log("=================================");
 
-  console.error("Message:", error.message);
-
-  console.error("Code:", error.code);
-
-  console.error("Status:", error.response?.status);
-
-  console.error("Response Data:", error.response?.data);
-
-  console.error("Stack:", error.stack);
-
-  throw new Error("Failed to fetch nearby places");
-}
+    throw error;
+  }
 };
