@@ -87,23 +87,19 @@ out body;
     );
 
     return places;
-  } catch (error) {
-    console.log(
-      "❌ OVERPASS REAL ERROR"
-    );
+  }  catch (error) {
+  console.error("❌ OVERPASS REAL ERROR");
 
-    console.log(
-      "STATUS:",
-      error.response?.status
-    );
+  console.error("Message:", error.message);
 
-    console.log(
-      "MESSAGE:",
-      error.message
-    );
+  console.error("Code:", error.code);
 
-    throw new Error(
-      "Failed to fetch nearby places"
-    );
-  }
+  console.error("Status:", error.response?.status);
+
+  console.error("Response Data:", error.response?.data);
+
+  console.error("Stack:", error.stack);
+
+  throw new Error("Failed to fetch nearby places");
+}
 };
