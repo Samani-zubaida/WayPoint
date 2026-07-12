@@ -2,17 +2,14 @@ import { getNearbyPlaces } from "../../services/placesService.js";
 
 export const fetchNearbyPlaces = async (req, res) => {
   try {
-    const {
-      lat,
-      lon,
-      lng,
-    } = req.query;
+    const { lat, lon, lng } = req.query;
 
-    const radius = Number(req.query.radius || 500);
-    // SUPPORT BOTH lon and lng
     const longitude = lon || lng;
 
-    console.log("📍 REQUEST:", {
+    const radius = Number(req.query.radius || 500);
+
+    console.log("📍 Incoming Request");
+    console.log({
       lat,
       longitude,
       radius,
@@ -21,27 +18,27 @@ export const fetchNearbyPlaces = async (req, res) => {
     if (!lat || !longitude) {
       return res.status(400).json({
         success: false,
-        error: "lat and longitude required",
+        error: "Latitude and longitude are required.",
       });
     }
 
     const places = await getNearbyPlaces(
-      lat,
-      longitude,
+      Number(lat),
+      Number(longitude),
       radius
     );
-console.log("Radius received:", radius);
-    return res.status(200).json({
+
+    return res.json({
       success: true,
       data: places,
     });
-  } catch (err) {
-    console.error("❌ CONTROLLER ERROR:");
-    console.error(err);
+  } catch (error) {
+    console.error("❌ Controller Error");
+    console.error(error);
 
     return res.status(500).json({
       success: false,
-      error: err.message,
+      error: error.message,
     });
   }
 };
