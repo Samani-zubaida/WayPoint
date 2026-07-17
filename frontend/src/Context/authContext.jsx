@@ -3,7 +3,7 @@ import { createContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.baseURL = backendUrl;
+axios.defaults.VITE_BACKEND_URL = backendUrl;
 
 export const AuthContext = createContext();
 
