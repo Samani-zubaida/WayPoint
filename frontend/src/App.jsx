@@ -38,7 +38,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden mt-20">
+    <div className="min-h-screen w-full overflow-x-hidden ">
       {showNavbar && <Navbar authUser={authUser} />}
 
       <div>

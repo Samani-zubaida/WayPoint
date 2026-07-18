@@ -3,33 +3,29 @@ import { motion } from "framer-motion";
 import PostCard from "./PostCard";
 
 const breakpointColumnsObj = {
-  default: 4,
-  1536: 4,
-  1280: 3,
+  default: 5,
+  1600: 5,
+  1400: 4,
+  1200: 4,
   1024: 3,
-  768: 2,
-  640: 2,
-  0: 1,
+  768: 3,
+  640: 3,
+  0: 3,
 };
-
 export default function PostGrid({ posts }) {
   if (!posts?.length) {
     return (
-      <div className="flex justify-center items-center py-40">
+      <div className="flex justify-center py-20">
         <div className="text-center">
+          <div className="text-6xl mb-4">📷</div>
 
-          <div className="text-7xl mb-6">
-            📷
-          </div>
-
-          <h2 className="text-3xl font-bold text-white">
-            No Places Found
+          <h2 className="text-white text-2xl font-bold">
+            No Posts Found
           </h2>
 
-          <p className="text-slate-400 mt-3">
-            Try another search or category.
+          <p className="text-slate-400 mt-2">
+            Try another search.
           </p>
-
         </div>
       </div>
     );
@@ -43,15 +39,15 @@ export default function PostGrid({ posts }) {
         hidden: {},
         show: {
           transition: {
-            staggerChildren: 0.08,
+            staggerChildren: 0.05,
           },
         },
       }}
     >
       <Masonry
         breakpointCols={breakpointColumnsObj}
-        className="flex gap-5"
-        columnClassName="space-y-5"
+        className="flex -ml-2 md:-ml-3 w-auto"
+        columnClassName="pl-2 md:pl-3 bg-clip-padding"
       >
         {posts.map((post, index) => (
           <motion.div
@@ -59,7 +55,7 @@ export default function PostGrid({ posts }) {
             variants={{
               hidden: {
                 opacity: 0,
-                y: 50,
+                y: 20,
               },
               show: {
                 opacity: 1,
@@ -67,7 +63,7 @@ export default function PostGrid({ posts }) {
               },
             }}
             transition={{
-              duration: .5,
+              duration: 0.35,
             }}
           >
             <PostCard

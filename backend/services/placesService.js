@@ -1,5 +1,11 @@
 import axios from "axios";
 
+const OVERPASS_SERVERS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
 
@@ -10,11 +16,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
   const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.sin(Δφ / 2) ** 2 +
     Math.cos(φ1) *
-    Math.cos(φ2) *
-    Math.sin(Δλ / 2) *
-    Math.sin(Δλ / 2);
+      Math.cos(φ2) *
+      Math.sin(Δλ / 2) ** 2;
 
   const c =
     2 *
@@ -31,76 +36,86 @@ export const getNearbyPlaces = async (
   lon,
   radius = 500
 ) => {
-  try {
-    console.log("📡 Calling Overpass API...");
-const query = `
-[out:json][timeout:15];
+  const query = `
+[out:json][timeout:20];
 
 (
-  node["amenity"](around:${radius},${lat},${lon});
-  way["amenity"](around:${radius},${lat},${lon});
-  relation["amenity"](around:${radius},${lat},${lon});
+  node["amenity"~"restaurant|cafe|fast_food|hospital|pharmacy|bank|atm"](around:${radius},${lat},${lon});
+  node["tourism"~"hotel|museum|attraction"](around:${radius},${lat},${lon});
+  node["leisure"="park"](around:${radius},${lat},${lon});
+
+  way["amenity"~"restaurant|cafe|fast_food|hospital|pharmacy|bank|atm"](around:${radius},${lat},${lon});
+  way["tourism"~"hotel|museum|attraction"](around:${radius},${lat},${lon});
+  way["leisure"="park"](around:${radius},${lat},${lon});
+
+  relation["amenity"~"restaurant|cafe|fast_food|hospital|pharmacy|bank|atm"](around:${radius},${lat},${lon});
+  relation["tourism"~"hotel|museum|attraction"](around:${radius},${lat},${lon});
+  relation["leisure"="park"](around:${radius},${lat},${lon});
 );
 
 out center;
 `;
-    const response = await axios.post(
-      "https://overpass-api.de/api/interpreter",
-      query,
-      {
+
+  let lastError;
+
+  for (const server of OVERPASS_SERVERS) {
+    try {
+      console.log(`📡 Trying ${server}`);
+
+      const response = await axios.post(server, query, {
         headers: {
           "Content-Type": "text/plain",
-          "User-Agent":
-            "NearbyExplorer/1.0",
+          "User-Agent": "WayPoint/1.0",
         },
-
         timeout: 30000,
-      }
-    );
+      });
 
-    console.log("✅ OVERPASS SUCCESS");
+      console.log("✅ Success:", server);
 
-    const elements =
-      response.data.elements || [];
+      const elements = response.data.elements || [];
 
-    const places = elements.map(
-      (place) => ({
-        id: place.id,
+      const places = elements
+        .map((place) => {
+          const placeLat = place.lat ?? place.center?.lat;
+          const placeLon = place.lon ?? place.center?.lon;
 
-        name:
-          place.tags?.name ||
-          "Unnamed Place",
+          if (placeLat == null || placeLon == null) {
+            return null;
+          }
 
-        type:
-          place.tags?.amenity ||
-          "place",
+          return {
+            id: place.id,
+            name: place.tags?.name || "Unnamed Place",
+            type:
+              place.tags?.amenity ||
+              place.tags?.tourism ||
+              place.tags?.leisure ||
+              "place",
+            lat: placeLat,
+            lon: placeLon,
+            distance: calculateDistance(
+              lat,
+              lon,
+              placeLat,
+              placeLon
+            ),
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.distance - b.distance);
 
-        lat: place.lat,
-        lon: place.lon,
+      return places;
+    } catch (err) {
+      console.log(`❌ ${server} failed`);
+      console.log(err.message);
 
-        distance: calculateDistance(
-          Number(lat),
-          Number(lon),
-          place.lat,
-          place.lon
-        ),
-      })
-    );
+      lastError = err;
+    }
+  }
 
-    return places;
-  }  catch (error) {
-  console.error("❌ OVERPASS REAL ERROR");
+  console.error(lastError);
 
-  console.error("Message:", error.message);
-
-  console.error("Code:", error.code);
-
-  console.error("Status:", error.response?.status);
-
-  console.error("Response Data:", error.response?.data);
-
-  console.error("Stack:", error.stack);
-
-  throw new Error("Failed to fetch nearby places");
-}
+  throw new Error(
+    "All Overpass servers are currently unavailable."
+  );
 };

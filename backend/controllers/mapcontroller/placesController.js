@@ -1,47 +1,40 @@
 import { getNearbyPlaces } from "../../services/placesService.js";
 
-export const fetchNearbyPlaces = async (
-  req,
-  res
-) => {
+export const fetchNearbyPlaces = async (req, res) => {
   try {
-    const {
-      lat,
-      lon,
-      lng
-    } = req.query;
+    const { lat, lon, lng, radius = 500 } = req.query;
 
-    const longitude = lon || lng;
+    const latitude = Number(lat);
+    const longitude = Number(lon || lng);
+    const searchRadius = Number(radius);
 
-    const radius = Number(
-      req.query.radius || 500
-    );
-
-    if (!lat || !longitude) {
+    if (
+      Number.isNaN(latitude) ||
+      Number.isNaN(longitude)
+    ) {
       return res.status(400).json({
         success: false,
-        error:
-          "Latitude and longitude are required."
+        error: "Valid latitude and longitude are required.",
       });
     }
 
-    const places =
-      await getNearbyPlaces(
-        Number(lat),
-        Number(longitude),
-        radius
-      );
+    const places = await getNearbyPlaces(
+      latitude,
+      longitude,
+      searchRadius
+    );
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      data: places
+      count: places.length,
+      data: places,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Nearby Places Error:", error.message);
 
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || "Failed to fetch nearby places",
     });
   }
 };

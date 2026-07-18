@@ -1,27 +1,24 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { FaPlay, FaImages, FaHeart, FaComment } from "react-icons/fa";
-import { FiUser } from "react-icons/fi";
+import { FaPlay, FaImages } from "react-icons/fa";
 
-const PostCard = ({ post, index }) => {
+const PostCard = ({ post }) => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
+
+  const image = post.images?.[0];
+
+  const isVideo =
+    post.video &&
+    (!post.images || post.images.length === 0);
 
   const openPost = () => {
     navigate(`/post/${post._id}`);
   };
 
-  const image = post.images?.[0];
-
-  const isVideo = !!post.video && (!post.images || post.images.length === 0);
-
-  const likes = post.likes?.length || 0;
-  const comments = post.comments?.length || 0;
-  const username = post.user?.name || "Anonymous";
-
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || !isVideo) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -34,275 +31,203 @@ const PostCard = ({ post, index }) => {
         }
       },
       {
-        threshold: 0.5,
-      },
+        threshold: 0.4,
+      }
     );
 
     observer.observe(videoRef.current);
 
     return () => observer.disconnect();
-  }, []);
+  }, [isVideo]);
 
   return (
     <motion.article
       layout
       whileHover={{
-        y: -8,
+        y: -4,
       }}
       transition={{
-        duration: 0.3,
+        duration: 0.25,
       }}
       onClick={openPost}
-      className="group cursor-pointer mb-6"
+      className="cursor-pointer mb-4 break-inside-avoid"
     >
       <div
         className="
-        rounded-[28px]
+        relative
         overflow-hidden
-        bg-[#10131c]
+        rounded-2xl
+        bg-[#111111]
         border
-        border-white/5
-        hover:border-cyan-400/20
+        border-white/10
+        hover:border-white/20
         transition-all
-        duration-500
-        shadow-xl
-        hover:shadow-cyan-500/20
-      "
+        duration-300
+        "
       >
-        {/* MEDIA */}
+        {/* ================= IMAGE ================= */}
 
-        <div className="relative overflow-hidden">
-          {!isVideo && image && (
-            <img
-              src={image}
-              alt={post.title}
-              className="
-              w-full
-              h-auto
-              object-cover
-              transition-all
-              duration-700
-              group-hover:scale-105
-            "
-            />
-          )}
-
-          {isVideo && (
-            <video
-              ref={videoRef}
-              src={post.video}
-              muted
-              autoPlay
-              loop
-              playsInline
-              className="
-              w-full
-              h-auto
-              object-cover
-              transition-all
-              duration-700
-              group-hover:scale-105
-            "
-            />
-          )}
-
-          {/* Gradient */}
-
-          <div
+        {!isVideo && image && (
+          <img
+            src={image}
+            alt={post.title}
             className="
-            absolute
-            inset-0
-            bg-gradient-to-t
-            from-black/60
-            via-transparent
-            to-transparent
-            opacity-0
-            group-hover:opacity-100
-            transition-all
-            duration-500
-          "
+              w-full
+              h-auto
+              object-cover
+            "
           />
+        )}
 
-          {/* Category */}
+        {/* ================= VIDEO ================= */}
 
-          <div
+        {isVideo && (
+          <video
+            ref={videoRef}
+            src={post.video}
+            muted
+            loop
+            playsInline
             className="
-            absolute
-            top-4
-            left-4
-            bg-black/50
-            backdrop-blur-xl
-            rounded-full
-            px-4
-            py-1.5
-            text-xs
-            font-semibold
-            tracking-wide
+              w-full
+              h-auto
+              object-cover
+            "
+          />
+        )}
+
+        {/* ================= CATEGORY ================= */}
+
+        <div
+          className="
+          absolute
+          top-3
+          left-3
+          bg-black/70
+          backdrop-blur-sm
+          text-white
+          text-[11px]
+          px-3
+          py-1
+          rounded-full
           "
-          >
-            {post.category}
-          </div>
-
-          {/* Media Badge */}
-
-          {post.images?.length > 1 && (
-            <div
-              className="
-              absolute
-              top-4
-              right-4
-              bg-black/60
-              backdrop-blur-xl
-              p-2.5
-              rounded-full
-            "
-            >
-              <FaImages size={13} />
-            </div>
-          )}
-
-          {isVideo && (
-            <div
-              className="
-              absolute
-              top-4
-              right-4
-              bg-black/60
-              backdrop-blur-xl
-              p-2.5
-              rounded-full
-            "
-            >
-              <FaPlay size={13} />
-            </div>
-          )}
+        >
+          {post.category}
         </div>
 
-        {/* CONTENT STARTS HERE */}
-        <div className="p-5">
-          {/* Category */}
+        {/* ================= MULTIPLE IMAGES ================= */}
 
-          <div className="mb-3">
-            <span
-              className="
-              inline-flex
-              items-center
-              rounded-full
-              bg-cyan-500/10
-              border
-              border-cyan-400/20
-              px-3
-              py-1
-              text-xs
-              font-semibold
-              uppercase
-              tracking-wider
-              text-cyan-300
+        {post.images?.length > 1 && (
+          <div
+            className="
+            absolute
+            top-3
+            right-3
+            h-8
+            w-8
+            rounded-full
+            bg-black/70
+            flex
+            items-center
+            justify-center
+            text-white
             "
-            >
-              {post.category}
-            </span>
+          >
+            <FaImages size={12} />
           </div>
+        )}
 
-          {/* Title */}
+        {/* ================= VIDEO BADGE ================= */}
 
+        {isVideo && (
+          <div
+            className="
+            absolute
+            top-3
+            right-3
+            h-8
+            w-8
+            rounded-full
+            bg-black/70
+            flex
+            items-center
+            justify-center
+            text-white
+            "
+          >
+            <FaPlay size={11} />
+          </div>
+        )}
+
+        {/* ================= TITLE ================= */}
+
+        <div
+          className="
+          absolute
+          bottom-0
+          left-0
+          right-0
+          bg-black/60
+          backdrop-blur-sm
+          p-4
+          "
+        >
           <h2
             className="
-            text-xl
-            font-bold
             text-white
+            font-semibold
+            text-sm
+            md:text-base
             line-clamp-2
-            leading-tight
-            transition-colors
-            duration-300
-            group-hover:text-cyan-300
-          "
+            "
           >
             {post.title}
           </h2>
 
-          {/* Description */}
+          {post.location?.placeName && (
+            <p
+              className="
+              text-gray-300
+              text-xs
+              mt-1
+              line-clamp-1
+              "
+            >
+              📍 {post.location.placeName}
+            </p>
+          )}
+        </div>
+      </div>
 
-          <p
-            className="
-            mt-3
-            text-sm
-            text-slate-400
-            line-clamp-2
-            leading-6
-          "
-          >
-            {post.description}
+      {/* ==========================================================
+          DESKTOP ONLY
+          Hide profile, likes & comments on mobile
+      =========================================================== */}
+
+      <div
+        className="
+        hidden
+        md:flex
+        items-center
+        justify-between
+        mt-3
+        px-1
+        "
+      >
+        <div>
+          <p className="text-white text-sm font-medium">
+            {post.user?.username || "Anonymous"}
           </p>
 
-          {/* Divider */}
+          <p className="text-xs text-gray-500">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
+        </div>
 
-          <div className="my-5 h-px bg-white/5" />
+        <div className="flex items-center gap-4 text-gray-400 text-sm">
+          <span>❤️ {post.likes?.length || 0}</span>
 
-          {/* Footer */}
-
-          <div className="flex items-center justify-between">
-            {/* User */}
-
-            <div className="flex items-center gap-3">
-              <div
-                className="
-                h-11
-                w-11
-                rounded-full
-                bg-gradient-to-br
-                from-cyan-400
-                to-blue-600
-                flex
-                items-center
-                justify-center
-                text-white
-                font-bold
-                shadow-lg
-              "
-              >
-                {username.charAt(0).toUpperCase()}
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-white">{username}</p>
-
-                <p className="text-xs text-slate-500">
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            {/* Stats */}
-
-            <div className="flex items-center gap-5">
-              <div
-                className="
-                flex
-                items-center
-                gap-2
-                text-rose-400
-              "
-              >
-                <FaHeart />
-
-                <span className="text-sm">{likes}</span>
-              </div>
-
-              <div
-                className="
-                flex
-                items-center
-                gap-2
-                text-slate-300
-              "
-              >
-                <FaComment />
-
-                <span className="text-sm">{comments}</span>
-              </div>
-            </div>
-          </div>
+          <span>💬 {post.comments?.length || 0}</span>
         </div>
       </div>
     </motion.article>
