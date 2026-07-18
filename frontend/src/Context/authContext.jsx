@@ -2,7 +2,7 @@ import axios from "axios";
 import { createContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const backendUrl = "http://localhost:5000";
+const backendUrl = "https://waypoint-1brn.onrender.com";
 axios.defaults.baseURL = backendUrl;
 
 export const AuthContext = createContext();
