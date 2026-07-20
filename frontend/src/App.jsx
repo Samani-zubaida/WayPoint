@@ -49,6 +49,7 @@ function App() {
           />
 
           <Route
+            
             path="/create-post"
             element={authUser ? <Post /> : <Navigate to="/login" />}
           />

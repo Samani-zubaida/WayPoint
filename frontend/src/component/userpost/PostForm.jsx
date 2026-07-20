@@ -140,7 +140,7 @@ function FloatingInput({
   const Component = as;
 
   return (
-    <div className="relative">
+    <div className="relative  ">
       {Icon && (
         <Icon
           size={18}
