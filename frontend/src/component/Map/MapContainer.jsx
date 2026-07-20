@@ -23,7 +23,7 @@ import { useRemainingRoute } from "../../hooks/useRemainingRoute";
 import { FixLeafletResize } from "../../services/FixLeafletResize";
 
 import { icons } from "./MapIcons";
-import SearchPlace from "./SearchPlace";
+import SearchPlace from "./SearchPlace.jsx";
 import RouteSearch from "./RoutesSearch";
 import MapUpdater from "./MapUpdater";
 
