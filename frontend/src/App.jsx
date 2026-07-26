@@ -1,12 +1,11 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/Login.jsx";
 import Chatbot from "./pages/Chatbot.jsx";
 import MapPage from "./pages/MapPage.jsx";
 import Navbar from "./component/Navbar/Navbar.jsx";
-
 import { AuthContext } from "./Context/authContext.jsx";
 
 import Post from "./pages/CreatePost.jsx";
@@ -18,81 +17,77 @@ import Intro from "./pages/Intro.jsx";
 
 function App() {
   const { authUser, isLoading } = useContext(AuthContext);
-
   const location = useLocation();
 
-  const [showNavbar, setShowNavbar] = useState(false);
-
-  useEffect(() => {
-    const navbarRoutes = ["/map", "/create-post", "/explore", "/chatAI"];
-
-    setShowNavbar(navbarRoutes.includes(location.pathname));
-  }, [location.pathname]);
+  const navbarRoutes = ["/map", "/create-post", "/explore", "/chatAI"];
+  const showNavbar = navbarRoutes.includes(location.pathname);
 
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        Loading...x
+        Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden ">
+    <div className="min-h-screen w-full overflow-x-hidden">
+      <Toaster position="top-right" />
+
       {showNavbar && <Navbar authUser={authUser} />}
 
-      <div>
-        <Routes>
-          <Route
-            path="/login"
-            element={!authUser ? <Login /> : <Navigate to="/create-post" />}
-          />
+      <Routes>
+        <Route
+          path="/"
+          element={<Intro />}
+        />
 
-          <Route
-            
-            path="/create-post"
-            element={authUser ? <Post /> : <Navigate to="/login" />}
-          />
+        <Route
+          path="/login"
+          element={!authUser ? <Login /> : <Navigate to="/create-post" replace />}
+        />
 
-          <Route path="/" element={<Intro />} />
+        <Route
+          path="/create-post"
+          element={authUser ? <Post /> : <Navigate to="/login" replace />}
+        />
 
-          <Route
-            path="/explore"
-            element={authUser ? <ViewPost /> : <Navigate to="/login" />}
-          />
+        <Route
+          path="/explore"
+          element={authUser ? <ViewPost /> : <Navigate to="/login" replace />}
+        />
 
-          <Route
-            path="/chatAI"
-            element={authUser ? <Chatbot /> : <Navigate to="/login" />}
-          />
+        <Route
+          path="/chatAI"
+          element={authUser ? <Chatbot /> : <Navigate to="/login" replace />}
+        />
 
-          <Route
-            path="/map"
-            element={authUser ? <MapPage /> : <Navigate to="/login" />}
-          />
+        <Route
+          path="/map"
+          element={authUser ? <MapPage /> : <Navigate to="/login" replace />}
+        />
 
-          <Route
-            path="/profile/:id"
-            element={
-              authUser ? (
-                <Profile authUser={authUser} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+        <Route
+          path="/profile/:id"
+          element={
+            authUser ? (
+              <Profile authUser={authUser} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
-          <Route
-            path="/post/:id"
-            element={authUser ? <InPost /> : <Navigate to="/login" />}
-          />
+        <Route
+          path="/post/:id"
+          element={authUser ? <InPost /> : <Navigate to="/login" replace />}
+        />
 
-          <Route
-            path="/post/edit/:id"
-            element={authUser ? <EditPost /> : <Navigate to="/login" />}
-          />
-        </Routes>
-      </div>
+        <Route
+          path="/post/edit/:id"
+          element={authUser ? <EditPost /> : <Navigate to="/login" replace />}
+        />
+      </Routes>
     </div>
   );
 }
