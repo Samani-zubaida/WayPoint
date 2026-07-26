@@ -56,9 +56,8 @@ const InPost = () => {
       try {
         console.log("Fetching URL:", `/api/posts/post/${id}`);
 
-        const res = await fetch(`/api/posts/post/${id}`, {
-          credentials: "include",
-        });
+        const { data } = await axios.get(`/api/posts/post/${id}`);
+        setPost(data);
 
         const data = await res.json();
 
