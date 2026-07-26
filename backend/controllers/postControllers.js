@@ -158,25 +158,25 @@ export const getSinglePost = async (req, res) => {
   try {
     const { postId } = req.params;
 
-    console.log("Received Post ID:", postId);
+    console.log("Received ID:", postId);
 
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       return res.status(400).json({
-        message: "Invalid post id",
+        message: "Invalid ObjectId",
       });
     }
 
     const post = await UserPost.findById(postId)
-      .populate("user", "_id name email username")
+      .populate("user", "_id name email")
       .populate({
         path: "comments",
         populate: {
           path: "user",
-          select: "_id name email username",
+          select: "_id name email",
         },
       });
 
-    console.log("Post Found:", post);
+    console.log("Found Post:", post);
 
     if (!post) {
       return res.status(404).json({
@@ -184,12 +184,12 @@ export const getSinglePost = async (req, res) => {
       });
     }
 
-    res.status(200).json(post);
+    return res.status(200).json(post);
   } catch (err) {
-    console.error("getSinglePost Error:", err);
+    console.error(err);
 
-    res.status(500).json({
-      message: "Internal Server Error",
+    return res.status(500).json({
+      message: err.message,
     });
   }
 };
