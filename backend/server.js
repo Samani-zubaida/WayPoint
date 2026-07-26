@@ -41,7 +41,6 @@ app.use(
   })
 );
 
-app.options("*", cors());
 
 
 // Request logger (optional)
