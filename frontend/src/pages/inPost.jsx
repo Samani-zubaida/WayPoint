@@ -51,29 +51,34 @@ const InPost = () => {
       );
     }
   };
-useEffect(() => {
-  const fetchPost = async () => {
-    try {
-      console.log("Fetching URL:", `/api/posts/post/${id}`);
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        console.log("Fetching URL:", `/api/posts/post/${id}`);
 
-      const res = await axios.get(`/api/posts/post/${id}`, {
-        withCredentials: true,
-      });
+        const res = await fetch(`/api/posts/post/${id}`, {
+          credentials: "include",
+        });
 
-      console.log("Success:", res.data);
+        const data = await res.json();
 
-      setPost(res.data);
-    } catch (err) {
-      console.log("Axios Error:", err);
-      console.log("Message:", err.message);
-      console.log("Code:", err.code);
-      console.log("Response:", err.response);
-      console.log("Request:", err.request);
-    }
-  };
+        console.log(data);
+        setPost(data);
 
-  if (id) fetchPost();
-}, [id]);
+        console.log("Success:", res.data);
+
+        setPost(res.data);
+      } catch (err) {
+        console.log("Axios Error:", err);
+        console.log("Message:", err.message);
+        console.log("Code:", err.code);
+        console.log("Response:", err.response);
+        console.log("Request:", err.request);
+      }
+    };
+
+    if (id) fetchPost();
+  }, [id]);
   /* CLOSE MENU */
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -103,29 +108,26 @@ useEffect(() => {
 
   console.log("URL Param ID:", id);
 
-
   /* LIKE */
-const handleLike = async () => {
-  try {
-    const res = await axios.put(
-      `/api/posts/${post._id}/like`,
-      {},
-      { withCredentials: true }
-    );
+  const handleLike = async () => {
+    try {
+      const res = await axios.put(
+        `/api/posts/${post._id}/like`,
+        {},
+        { withCredentials: true },
+      );
 
-    setLikes(res.data.likes.length);
+      setLikes(res.data.likes.length);
 
-    setLiked(
-      res.data.likes.some(
-        (likeId) => likeId.toString() === authUser?._id
-      )
-    );
+      setLiked(
+        res.data.likes.some((likeId) => likeId.toString() === authUser?._id),
+      );
 
-    setPost(res.data);
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setPost(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   /* ADD COMMENT */
   const handleAddComment = async () => {
