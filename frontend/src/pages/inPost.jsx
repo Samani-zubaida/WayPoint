@@ -51,33 +51,32 @@ const InPost = () => {
       );
     }
   };
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        console.log("Fetching URL:", `/api/posts/post/${id}`);
+ useEffect(() => {
+  const fetchPost = async () => {
+    try {
+      setLoading(true);
 
-        const { data } = await axios.get(`/api/posts/post/${id}`);
-        setPost(data);
+      console.log("Fetching Post:", id);
 
-        const data = await res.json();
+      const { data } = await axios.get(`/api/posts/post/${id}`);
 
-        console.log(data);
-        setPost(data);
+      console.log("Fetched Post:", data);
 
-        console.log("Success:", res.data);
+      setPost(data);
+      setLikes(data.likes?.length || 0);
+      setLiked(data.likes?.includes(authUser?._id));
+    } catch (err) {
+      console.error("Error fetching post:", err.response?.data || err);
+      setPost(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setPost(res.data);
-      } catch (err) {
-        console.log("Axios Error:", err);
-        console.log("Message:", err.message);
-        console.log("Code:", err.code);
-        console.log("Response:", err.response);
-        console.log("Request:", err.request);
-      }
-    };
-
-    if (id) fetchPost();
-  }, [id]);
+  if (id) {
+    fetchPost();
+  }
+}, [id, authUser]);
   /* CLOSE MENU */
   useEffect(() => {
     const handleClickOutside = (e) => {
