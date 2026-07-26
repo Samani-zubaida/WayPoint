@@ -54,41 +54,26 @@ const InPost = () => {
 useEffect(() => {
   const fetchPost = async () => {
     try {
-      setLoading(true);
-
-      console.log("Fetching post:", id);
+      console.log("Fetching URL:", `/api/posts/post/${id}`);
 
       const res = await axios.get(`/api/posts/post/${id}`, {
         withCredentials: true,
       });
 
-      console.log("Fetched Post:", res.data);
+      console.log("Success:", res.data);
 
       setPost(res.data);
-
-      setLikes(res.data.likes?.length || 0);
-
-      setLiked(
-        res.data.likes?.some(
-          (likeId) => likeId.toString() === authUser?._id
-        ) || false
-      );
-    } catch (error) {
-      console.error(
-        "Error fetching post:",
-        error.response?.data || error.message
-      );
-
-      setPost(null);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.log("Axios Error:", err);
+      console.log("Message:", err.message);
+      console.log("Code:", err.code);
+      console.log("Response:", err.response);
+      console.log("Request:", err.request);
     }
   };
 
-  if (id) {
-    fetchPost();
-  }
-}, [id, authUser]);
+  if (id) fetchPost();
+}, [id]);
   /* CLOSE MENU */
   useEffect(() => {
     const handleClickOutside = (e) => {
