@@ -22,7 +22,7 @@ export default function CTA() {
           className="mt-14"
         >
           <a
-            href="/explore"
+            href="https://way-point-blush.vercel.app/explore"
             className="group inline-flex items-center gap-3 rounded-full bg-white px-10 py-5 text-base font-medium text-black shadow-[0_40px_100px_-20px_rgba(255,255,255,0.5)] transition hover:bg-white/90"
           >
             Start Exploring
