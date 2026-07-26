@@ -1,7 +1,7 @@
 import cloudinary from "../lib/config.js";
 import UserPost from "../models/UserPost.js";
 import mongoose from "mongoose";
-import UserPost from "../models/UserPost.js";
+
 
 /* =========================
    CREATE POST
