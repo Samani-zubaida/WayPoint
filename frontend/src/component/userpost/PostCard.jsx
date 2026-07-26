@@ -9,11 +9,12 @@ const PostCard = ({ post }) => {
 
   const image = post.images?.[0];
 
-  const isVideo =
-    post.video &&
-    (!post.images || post.images.length === 0);
+  const isVideo = post.video && (!post.images || post.images.length === 0);
 
   const openPost = () => {
+    console.log("Clicked Post:", post);
+    console.log("Navigating to:", `/post/${post._id}`);
+
     navigate(`/post/${post._id}`);
   };
 
@@ -32,7 +33,7 @@ const PostCard = ({ post }) => {
       },
       {
         threshold: 0.4,
-      }
+      },
     );
 
     observer.observe(videoRef.current);

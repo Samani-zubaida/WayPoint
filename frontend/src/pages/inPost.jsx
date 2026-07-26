@@ -98,6 +98,9 @@ const InPost = () => {
     }
   };
 
+  console.log("URL Param ID:", id);
+  console.log("Response:", res.data);
+
   /* LIKE */
   const handleLike = async () => {
     try {
