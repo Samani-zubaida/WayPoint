@@ -29,18 +29,30 @@ app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:000",
+  "https://way-point-blush.vercel.app", // replace with your Vercel URL
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://way-point-blush.vercel.app",
-    ],
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+app.options("*", cors());
 
 
 // Request logger (optional)
