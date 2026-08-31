@@ -24,7 +24,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 export const getNearbyPlaces = async (
   lat,
   lon,
-  radius = 500
+  radius = 5000
 ) => {
   try {
     console.log("📡 Fetching nearby places from Geoapify...");

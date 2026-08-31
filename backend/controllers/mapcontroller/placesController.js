@@ -14,7 +14,7 @@ export const fetchNearbyPlaces = async (
     const longitude = lon || lng;
 
     const radius = Number(
-      req.query.radius || 500
+      req.query.radius || 5000
     );
 
     if (!lat || !longitude) {

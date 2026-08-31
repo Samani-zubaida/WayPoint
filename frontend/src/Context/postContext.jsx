@@ -63,7 +63,7 @@ export const PostProvider = ({ children }) => {
 
       formData.append("location", JSON.stringify(coords));
 
-      await axios.post("https://waypoint-1brn.onrender.com/api/posts/upload", formData, {
+      await axios.post("http://localhost:5000/api/posts/upload", formData, {
         withCredentials: true,
       });
 

@@ -8,7 +8,7 @@ const Layout = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [center, setCenter] = useState(null);
-  const [radius, setRadius] = useState(500);
+  const [radius, setRadius] = useState(5000);
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [hoveredImageId, setHoveredImageId] = useState(null);

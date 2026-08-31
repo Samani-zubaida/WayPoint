@@ -3,7 +3,7 @@ import axios from "axios";
 
 export const useNearbyPlaces = (
   center,
-  radius = 500
+  radius = 5000
 ) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ export const useNearbyPlaces = (
         console.log("Radius:", radius);
 
         const res = await axios.get(
-          "https://waypoint-1brn.onrender.com/api/map/places/nearby",
+          "http://localhost:5000/api/map/places/nearby",
           {
             params: {
               lat: center.lat,
