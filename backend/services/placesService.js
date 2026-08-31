@@ -1,5 +1,11 @@
 import axios from "axios";
 
+const OVERPASS_SERVERS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
 
@@ -12,11 +18,15 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(Δφ / 2) ** 2 +
     Math.cos(φ1) *
-    Math.cos(φ2) *
-    Math.sin(Δλ / 2) ** 2;
+      Math.cos(φ2) *
+      Math.sin(Δλ / 2) ** 2;
 
   const c =
-    2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
 
   return R * c;
 }
@@ -26,88 +36,86 @@ export const getNearbyPlaces = async (
   lon,
   radius = 5000
 ) => {
-  try {
-    console.log("📡 Fetching nearby places from Geoapify...");
+  const query = `
+[out:json][timeout:20];
 
-    const apiKey = process.env.GEOAPIFY_API_KEY;
+(
+  node["amenity"~"restaurant|cafe|fast_food|hospital|pharmacy|bank|atm"](around:${radius},${lat},${lon});
+  node["tourism"~"hotel|museum|attraction"](around:${radius},${lat},${lon});
+  node["leisure"="park"](around:${radius},${lat},${lon});
 
-    if (!apiKey) {
-      throw new Error(
-        "Missing GEOAPIFY_API_KEY in .env"
-      );
+  way["amenity"~"restaurant|cafe|fast_food|hospital|pharmacy|bank|atm"](around:${radius},${lat},${lon});
+  way["tourism"~"hotel|museum|attraction"](around:${radius},${lat},${lon});
+  way["leisure"="park"](around:${radius},${lat},${lon});
+
+  relation["amenity"~"restaurant|cafe|fast_food|hospital|pharmacy|bank|atm"](around:${radius},${lat},${lon});
+  relation["tourism"~"hotel|museum|attraction"](around:${radius},${lat},${lon});
+  relation["leisure"="park"](around:${radius},${lat},${lon});
+);
+
+out center;
+`;
+
+  let lastError;
+
+  for (const server of OVERPASS_SERVERS) {
+    try {
+      console.log(`📡 Trying ${server}`);
+
+      const response = await axios.post(server, query, {
+        headers: {
+          "Content-Type": "text/plain",
+          "User-Agent": "WayPoint/1.0",
+        },
+        timeout: 30000,
+      });
+
+      console.log("✅ Success:", server);
+
+      const elements = response.data.elements || [];
+
+      const places = elements
+        .map((place) => {
+          const placeLat = place.lat ?? place.center?.lat;
+          const placeLon = place.lon ?? place.center?.lon;
+
+          if (placeLat == null || placeLon == null) {
+            return null;
+          }
+
+          return {
+            id: place.id,
+            name: place.tags?.name || "Unnamed Place",
+            type:
+              place.tags?.amenity ||
+              place.tags?.tourism ||
+              place.tags?.leisure ||
+              "place",
+            lat: placeLat,
+            lon: placeLon,
+            distance: calculateDistance(
+              lat,
+              lon,
+              placeLat,
+              placeLon
+            ),
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.distance - b.distance);
+
+      return places;
+    } catch (err) {
+      console.log(`❌ ${server} failed`);
+      console.log(err.message);
+
+      lastError = err;
     }
-
-    const categories = [
-      "catering.restaurant",
-      "catering.fast_food",
-      "catering.cafe",
-      "commercial.supermarket",
-      "commercial.convenience",
-      "commercial.health_and_beauty.pharmacy",
-      "healthcare.hospital",
-      "education.school",
-      "education.university",
-      "entertainment",
-      "tourism"
-    ].join(","); 
-    const url =
-      "https://api.geoapify.com/v2/places";
-
-    const response = await axios.get(url, {
-      params: {
-        categories,
-        filter: `circle:${lon},${lat},${radius}`,
-        bias: `proximity:${lon},${lat}`,
-        limit: 100,
-        apiKey
-      },
-      timeout: 30000
-    });
-
-    const features =
-      response.data.features || [];
-
-    const places = features.map((feature) => {
-      const p = feature.properties;
-
-      return {
-        id: p.place_id,
-
-        name:
-          p.name ||
-          p.address_line1 ||
-          "Unnamed Place",
-
-        type:
-          p.categories?.[0] || "place",
-
-        lat: p.lat,
-
-        lon: p.lon,
-
-        address:
-          p.formatted || "",
-
-        distance: calculateDistance(
-          Number(lat),
-          Number(lon),
-          p.lat,
-          p.lon
-        )
-      };
-    });
-
-    console.log(
-      `✅ Found ${places.length} places`
-    );
-
-    return places;
-  } catch (error) {
-    console.error("❌ Geoapify Error");
-    console.error(error.response?.data || error.message);
-
-    throw new Error(
-      "Failed to fetch nearby places"
-    );
   }
+
+  console.error(lastError);
+
+  throw new Error(
+    "All Overpass servers are currently unavailable."
+  );
 };

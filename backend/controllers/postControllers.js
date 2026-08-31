@@ -1,5 +1,7 @@
 import cloudinary from "../lib/config.js";
 import UserPost from "../models/UserPost.js";
+import mongoose from "mongoose";
+
 
 /* =========================
    CREATE POST
@@ -151,29 +153,46 @@ export const getPostById = async (req, res) => {
    GET SINGLE POST (WITH COMMENTS)
 ========================= */
 // GET SINGLE POST WITH COMMENTS + LIKES
+
 export const getSinglePost = async (req, res) => {
   try {
-    const post = await UserPost.findById(req.params.postId)
-      .populate("user", "_id email name")
+    const { postId } = req.params;
+
+    console.log("Received ID:", postId);
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({
+        message: "Invalid ObjectId",
+      });
+    }
+
+    const post = await UserPost.findById(postId)
+      .populate("user", "_id name email")
       .populate({
         path: "comments",
         populate: {
           path: "user",
-          select: "name email",
+          select: "_id name email",
         },
       });
 
+    console.log("Found Post:", post);
+
     if (!post) {
-      return res.status(404).json({ msg: "Post not found" });
+      return res.status(404).json({
+        message: "Post not found",
+      });
     }
 
-    res.status(200).json(post);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Internal server error" });
+    return res.status(200).json(post);
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      message: err.message,
+    });
   }
 };
-
 
 /* =========================
    UPDATE POST

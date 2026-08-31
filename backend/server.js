@@ -28,9 +28,19 @@ app.get("/", (req, res) => {
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:000",
+  "https://way-point-blush.vercel.app", // replace with your Vercel URL
+];
+
 app.use(
   cors()
 );
+
+
+
 
 // Request logger (optional)
 app.use((req, res, next) => {

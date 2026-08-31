@@ -45,7 +45,7 @@ export default function Hero() {
                   className="mt-8 flex flex-col gap-3 sm:flex-row"
                 >
                   <a
-                    href="#"
+                    href="https://way-point-blush.vercel.app/explore"
                     className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-black shadow-[0_20px_50px_-15px_rgba(255,255,255,0.5)] transition hover:bg-white/90"
                   >
                     Start Exploring
@@ -56,7 +56,7 @@ export default function Hero() {
                     className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-6 py-3.5 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/5"
                     style={{ background: "rgba(255,255,255,0.05)" }}
                   >
-                    <Play className="h-3.5 w-3.5" /> Watch Demo
+                   
                   </a>
                 </motion.div>
 

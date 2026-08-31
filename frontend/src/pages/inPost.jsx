@@ -51,26 +51,32 @@ const InPost = () => {
       );
     }
   };
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const res = await axios.get(`/api/posts/post/${id}`, {
-          withCredentials: true,
-        });
+ useEffect(() => {
+  const fetchPost = async () => {
+    try {
+      setLoading(true);
 
-        setPost(res.data);
-        setLikes(res.data.likes?.length || 0);
-        setLiked(res.data.likes?.includes(authUser?._id));
-      } catch (error) {
-        console.error("Error fetching post", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      console.log("Fetching Post:", id);
 
+      const { data } = await axios.get(`/api/posts/post/${id}`);
+
+      console.log("Fetched Post:", data);
+
+      setPost(data);
+      setLikes(data.likes?.length || 0);
+      setLiked(data.likes?.includes(authUser?._id));
+    } catch (err) {
+      console.error("Error fetching post:", err.response?.data || err);
+      setPost(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (id) {
     fetchPost();
-  }, [id, authUser]);
-
+  }
+}, [id, authUser]);
   /* CLOSE MENU */
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -98,6 +104,8 @@ const InPost = () => {
     }
   };
 
+  console.log("URL Param ID:", id);
+
   /* LIKE */
   const handleLike = async () => {
     try {
@@ -107,10 +115,13 @@ const InPost = () => {
         { withCredentials: true },
       );
 
-      const updated = res.data;
+      setLikes(res.data.likes.length);
 
-      setLikes(updated.likes.length);
-      setLiked(updated.likes.includes(authUser?._id));
+      setLiked(
+        res.data.likes.some((likeId) => likeId.toString() === authUser?._id),
+      );
+
+      setPost(res.data);
     } catch (error) {
       console.error(error);
     }
