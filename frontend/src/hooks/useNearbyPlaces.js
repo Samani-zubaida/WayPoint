@@ -25,7 +25,7 @@ export const useNearbyPlaces = (
         console.log("Radius:", radius);
 
         const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/map/places/nearby`,
+          "http://localhost:5000/api/map/places/nearby",
           {
             params: {
               lat: center.lat,
@@ -58,7 +58,7 @@ export const useNearbyPlaces = (
       ignore = true;
     };
   }, [center?.lat, center?.lng, radius]);
-console.log("Radius received:", radius);
+  console.log("Radius received:", radius);
   return {
     data,
     loading,
